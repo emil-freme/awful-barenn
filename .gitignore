@@ -1,0 +1,15 @@
+# Material de aula local
+*.html
+*.pdf
+
+# Binários
+barenn
+barenn_gpu
+
+# Saídas geradas (as evidências vão nas Issues)
+callgrind.out.*
+*.nsys-rep
+*.sqlite
+*.ncu-rep
+*.out
+optdigits_x*.tes
