@@ -1,3 +1,14 @@
+# Resultados
+
+Tempos de treino no cluster Franky (i7-13700T), média de 5 execuções. Todas as versões
+dão a mesma saída do código original (conferido com `scripts/validar.sh`).
+
+| Versão | Issue | Tag | Treino (s) |
+|---|---|---|---:|
+| Legado com -O3 | [#1](../../issues/1) | [v0.1-baseline](../../tree/v0.1-baseline) | 0,362 |
+
+---
+
 # Projeto Barenn: O Legado, a Sobrevivência e o Salto para a GPU
 
 Era uma segunda-feira aparentemente tranquila quando a demanda chegou à sua mesa. A liderança técnica se aproximou com um sorriso contido e soltou aquela frase clássica que faz qualquer engenheiro gelar por dentro:
