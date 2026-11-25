@@ -1,0 +1,20 @@
+compute10
+OK: saida identica a referencia (ref_output.txt)
+barenn_v01
+Binario: ./barenn_v01 | Execucoes: 5
+Tempo de treino: media 0.3667 s | dp 0.0005 s | min 0.3661 s | max 0.3675 s
+barenn
+Binario: ./barenn | Execucoes: 5
+Tempo de treino: media 0.4230 s | dp 0.0002 s | min 0.4228 s | max 0.4233 s
+barenn_noinl
+Binario: ./barenn_noinl | Execucoes: 5
+Tempo de treino: media 0.4227 s | dp 0.0004 s | min 0.4220 s | max 0.4233 s
+barenn_v01
+Binario: ./barenn_v01 | Execucoes: 5
+Tempo de treino: media 0.3665 s | dp 0.0001 s | min 0.3663 s | max 0.3666 s
+barenn
+Binario: ./barenn | Execucoes: 5
+Tempo de treino: media 0.4230 s | dp 0.0002 s | min 0.4227 s | max 0.4233 s
+barenn_noinl
+Binario: ./barenn_noinl | Execucoes: 5
+Tempo de treino: media 0.4225 s | dp 0.0004 s | min 0.4220 s | max 0.4229 s
