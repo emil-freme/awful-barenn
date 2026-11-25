@@ -7,7 +7,8 @@
 # -ffp-contract=off: impede o compilador de fundir a*b+c em FMA, o que muda o
 #   arredondamento; mantém a saída bit a bit idêntica à referência.
 CXX      ?= g++
-CXXFLAGS ?= -O3 -march=x86-64-v3 -ffp-contract=off -g -std=c++17 -Wall -Wextra
+# -fopenmp: paraleliza a conversao dos arquivos de entrada (ler_dados).
+CXXFLAGS ?= -O3 -march=x86-64-v3 -ffp-contract=off -fopenmp -g -std=c++17 -Wall -Wextra
 TARGET   := barenn
 SRC      := barenn.cpp
 PROF_DIR := profiling

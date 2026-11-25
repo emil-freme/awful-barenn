@@ -135,42 +135,62 @@ struct Amostra {
     int rotulo;
 };
 
+// Valida e converte uma linha "a0,a1,...,a63,rotulo". Devolve false se a
+// linha estiver fora do formato esperado.
+bool ler_linha(const string& linha, Amostra& amostra) {
+    istringstream campos(linha);
+    amostra.imagem.clear();
+    amostra.imagem.reserve(entradas);
+    // Cada atributo deve ser seguido por vírgula, inclusive o último.
+    for (int i = 0; i < entradas; ++i) {
+        float valor;
+        char separador;
+        if (!(campos >> valor >> separador) || separador != ',' ||
+            !isfinite(valor) || valor < 0 || valor > 16) {
+            break;
+        }
+        // Converte os valores de [0, 16] para [0, 1].
+        amostra.imagem.push_back(valor / 16.0f);
+    }
+    // Depois dos atributos, deve restar apenas o rótulo de 0 a 9.
+    return amostra.imagem.size() == entradas &&
+           (campos >> amostra.rotulo) &&
+           amostra.rotulo >= 0 && amostra.rotulo < classes &&
+           (campos >> ws).eof();
+}
+
 vector<Amostra> ler_dados(const string& caminho) {
     ifstream arquivo(caminho);
     if (!arquivo) {
         throw runtime_error("Não foi possível abrir " + caminho);
     }
 
-    vector<Amostra> dados;
+    // Etapa sequencial (barata): separa o arquivo em linhas.
+    vector<string> linhas;
     string linha;
-    size_t numero_linha = 0;
     while (getline(arquivo, linha)) {
-        ++numero_linha;
-        istringstream campos(linha);
-        Amostra amostra{};
-        // Cada atributo deve ser seguido por vírgula, inclusive o último.
-        for (int i = 0; i < entradas; ++i) {
-            float valor;
-            char separador;
-            if (!(campos >> valor >> separador) || separador != ',' ||
-                !isfinite(valor) || valor < 0 || valor > 16) {
-                break;
-            }
-            // Converte os valores de [0, 16] para [0, 1].
-            amostra.imagem.push_back(valor / 16.0f);
-        }
-        // Depois dos atributos, deve restar apenas o rótulo de 0 a 9.
-        if (amostra.imagem.size() != entradas ||
-            !(campos >> amostra.rotulo) ||
-            amostra.rotulo < 0 || amostra.rotulo >= classes ||
-            !(campos >> ws).eof()) {
-            throw runtime_error(caminho + ":" + to_string(numero_linha) +
-                " — esperados 64 atributos de 0 a 16 e um rótulo inteiro de 0 a 9");
-        }
-        dados.push_back(move(amostra));
+        linhas.push_back(move(linha));
     }
-    if (arquivo.bad() || dados.empty()) {
+    if (arquivo.bad() || linhas.empty()) {
         throw runtime_error("Falha de leitura ou arquivo vazio: " + caminho);
+    }
+
+    // Etapa paralela: cada linha é convertida de forma independente e
+    // gravada na sua própria posição, preservando a ordem do arquivo.
+    // Exceções não podem sair de uma região OpenMP, então cada thread só
+    // registra a menor linha inválida encontrada.
+    const long n = static_cast<long>(linhas.size());
+    vector<Amostra> dados(n);
+    long primeira_invalida = n;
+    #pragma omp parallel for schedule(static) reduction(min : primeira_invalida)
+    for (long i = 0; i < n; ++i) {
+        if (!ler_linha(linhas[i], dados[i]) && i < primeira_invalida) {
+            primeira_invalida = i;
+        }
+    }
+    if (primeira_invalida < n) {
+        throw runtime_error(caminho + ":" + to_string(primeira_invalida + 1) +
+            " — esperados 64 atributos de 0 a 16 e um rótulo inteiro de 0 a 9");
     }
     return dados;
 }
@@ -294,8 +314,14 @@ int main(int argc, char** argv) {
     const string arquivo_teste = argc == 3 ? argv[2] : "optdigits.tes";
 
     try {
+        // A leitura e a conversão dos arquivos também são medidas, pois
+        // são a parte do programa que pode ser paralelizada sem alterar o
+        // algoritmo de treino.
+        const auto inicio_total = chrono::steady_clock::now();
         const auto treino = Barenn::ler_dados(arquivo_treino);
         const auto teste = Barenn::ler_dados(arquivo_teste);
+        const chrono::duration<double> tempo_leitura =
+            chrono::steady_clock::now() - inicio_total;
         if (filesystem::equivalent(arquivo_treino, arquivo_teste)) {
             throw runtime_error("Use arquivos distintos para treino e teste.");
         }
@@ -338,7 +364,11 @@ int main(int argc, char** argv) {
                  << " | perda media " << perdas[epoca] << "\n";
         }
         cout << "Tempo de treino " << tempo.count() << " s\n";
+        cout << "Tempo de leitura " << tempo_leitura.count() << " s\n";
         Barenn::avaliar(l1, l2, l3, teste);
+        const chrono::duration<double> tempo_total =
+            chrono::steady_clock::now() - inicio_total;
+        cout << "Tempo total " << tempo_total.count() << " s\n";
     } catch (const exception& erro) {
         cerr << "Erro: " << erro.what() << "\n";
         return 1;
