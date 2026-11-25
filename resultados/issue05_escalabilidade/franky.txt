@@ -1,0 +1,22 @@
+Host: compute10 | CPUs alocadas:  0,2,4,6,8,10,12,14
+Binario: ./barenn | Execucoes: 10 | OMP_NUM_THREADS=1
+Tempo de treino: media 0.1298 s | dp 0.0009 s | min 0.1291 s | max 0.1323 s
+Tempo de leitura: media 0.0219 s | dp 0.0006 s | min 0.0213 s | max 0.0234 s
+Tempo total: media 0.1521 s | dp 0.0011 s | min 0.1511 s | max 0.1545 s
+
+Binario: ./barenn | Execucoes: 10 | OMP_NUM_THREADS=2
+Tempo de treino: media 0.1298 s | dp 0.0005 s | min 0.1292 s | max 0.1308 s
+Tempo de leitura: media 0.0120 s | dp 0.0004 s | min 0.0117 s | max 0.0132 s
+Tempo total: media 0.1423 s | dp 0.0006 s | min 0.1415 s | max 0.1432 s
+
+Binario: ./barenn | Execucoes: 10 | OMP_NUM_THREADS=4
+Tempo de treino: media 0.1296 s | dp 0.0002 s | min 0.1292 s | max 0.1298 s
+Tempo de leitura: media 0.0064 s | dp 0.0001 s | min 0.0063 s | max 0.0065 s
+Tempo total: media 0.1365 s | dp 0.0002 s | min 0.1362 s | max 0.1367 s
+
+Binario: ./barenn | Execucoes: 10 | OMP_NUM_THREADS=8
+Tempo de treino: media 0.1299 s | dp 0.0003 s | min 0.1296 s | max 0.1304 s
+Tempo de leitura: media 0.0041 s | dp 0.0000 s | min 0.0041 s | max 0.0042 s
+Tempo total: media 0.1346 s | dp 0.0003 s | min 0.1342 s | max 0.1350 s
+
+   JobState=COMPLETED Reason=None Dependency=(null)

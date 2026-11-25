@@ -1,0 +1,7 @@
+# Binários e saídas de profiling geradas localmente
+barenn
+barenn_baseline
+profiling/
+callgrind.out.*
+cachegrind.out.*
+!callgrind.out.45358
