@@ -1,0 +1,28 @@
+===== AMBIENTE =====
+Host:       compute10
+Data:       2026-11-25T18:14:34-05:00
+Commit:     v0.1-grad-in-morto-4-g155aaf3
+Kernel:     5.14.0-503.40.1.el9_5.x86_64
+CPU(s):                               24
+Model name:                           13th Gen Intel(R) Core(TM) i7-13700T
+Thread(s) per core:                   2
+Core(s) per socket:                   16
+Socket(s):                            1
+CPU(s) scaling MHz:                   27%
+L1d cache:                            640 KiB (16 instances)
+L2 cache:                             24 MiB (10 instances)
+L3 cache:                             30 MiB (1 instance)
+RAM:        62Gi
+Compilador: g++ (GCC) 14.2.0
+SLURM:      job 30979 | particao sunny_cpu | nos compute10 | cpus 1
+
+===== BUILD =====
+Build feito antes da submissao: g++ (GCC) 14.2.0 | CXXFLAGS ?= -O3 -march=x86-64-v3 -ffp-contract=off -g -std=c++17 -Wall -Wextra
+
+===== VALIDACAO =====
+./validate.sh ./barenn
+OK: saida identica a referencia (ref_output.txt)
+
+===== BENCHMARK (N=10) =====
+Binario: ./barenn | Execucoes: 10
+Tempo de treino: media 0.1328 s | dp 0.0004 s | min 0.1325 s | max 0.1338 s

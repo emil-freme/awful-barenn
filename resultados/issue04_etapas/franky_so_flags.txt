@@ -1,0 +1,2 @@
+OK: saida identica a referencia (ref_output.txt)
+Tempo de treino: media 0.2033 s | dp 0.0007 s | min 0.2029 s | max 0.2052 s
