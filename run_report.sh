@@ -12,7 +12,7 @@ N=${1:-10}
 echo "===== AMBIENTE ====="
 echo "Host:       $(hostname)"
 echo "Data:       $(date -Iseconds)"
-echo "Commit:     $(git rev-parse --short HEAD 2>/dev/null || echo '?') $(git describe --tags --always 2>/dev/null || true)"
+echo "Commit:     ${GIT_COMMIT:-$(git describe --tags --always 2>/dev/null || echo '?')}"
 echo "Kernel:     $(uname -r)"
 lscpu | grep -E '^(Model name|CPU\(s\)|Thread\(s\) per core|Core\(s\) per socket|Socket\(s\)|L1d|L2|L3)' || true
 echo "RAM:        $(free -h | awk '/^Mem/ {print $2}')"
@@ -29,7 +29,13 @@ fi
 
 echo
 echo "===== BUILD ====="
-make -B 2>&1
+# No Franky os nós de computação não têm os headers da glibc: o binário é
+# compilado no nó de login (franky_submit.sh) e o job usa SKIP_BUILD=1.
+if [ "${SKIP_BUILD:-0}" = 1 ]; then
+    echo "Build feito antes da submissao: $(${CXX:-g++} --version | head -1) | $(grep -E '^CXXFLAGS' Makefile)"
+else
+    make -B 2>&1
+fi
 
 echo
 echo "===== VALIDACAO ====="
