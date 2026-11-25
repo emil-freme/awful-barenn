@@ -1,7 +1,13 @@
 # Build reprodutível do Barenn. As flags ficam fixas aqui para que toda
 # medição (bench, profiling) use exatamente o mesmo binário.
+# -O3: habilita o vetorizador de laços.
+# -march=x86-64-v3: AVX2/FMA, suportado pelo notebook (Zen 3) e pelos nós do
+#   Franky (Raptor Lake). Não usamos -march=native porque no Franky o build
+#   é feito no nó de login (Kaby Lake), diferente dos nós de computação.
+# -ffp-contract=off: impede o compilador de fundir a*b+c em FMA, o que muda o
+#   arredondamento; mantém a saída bit a bit idêntica à referência.
 CXX      ?= g++
-CXXFLAGS ?= -O2 -g -std=c++17 -Wall -Wextra
+CXXFLAGS ?= -O3 -march=x86-64-v3 -ffp-contract=off -g -std=c++17 -Wall -Wextra
 TARGET   := barenn
 SRC      := barenn.cpp
 PROF_DIR := profiling
