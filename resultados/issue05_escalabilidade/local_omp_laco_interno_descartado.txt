@@ -1,0 +1,13 @@
+Experimento descartado: OpenMP no laco de atualizacao de pesos (por amostra), codigo da v0.3
+pragma: omp parallel for schedule(static) if (in_features >= 32) no laco sobre j do Backward
+
+Sequencial (v0.3, sem OpenMP):
+Tempo de treino: media 0.1848 s | dp 0.0051 s | min 0.1786 s | max 0.1934 s
+OpenMP threads=1:
+Tempo de treino: media 0.4535 s | dp 0.0027 s | min 0.4508 s | max 0.4579 s
+OpenMP threads=2:
+Tempo de treino: media 0.6324 s | dp 0.0051 s | min 0.6248 s | max 0.6385 s
+OpenMP threads=4:
+Tempo de treino: media 0.6475 s | dp 0.0064 s | min 0.6392 s | max 0.6582 s
+OpenMP threads=8:
+Tempo de treino: media 0.7009 s | dp 0.0320 s | min 0.6788 s | max 0.7642 s
