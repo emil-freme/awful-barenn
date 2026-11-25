@@ -63,7 +63,10 @@ public:
         return out;
     }
 
-    vector<float> Backward(vector<float> grad_out, float learning_rate) {
+    // need_grad_in = false pula o cálculo do gradiente da entrada. Isso vale
+    // para a primeira camada, cujo gradiente de entrada nunca é usado.
+    vector<float> Backward(vector<float> grad_out, float learning_rate,
+                           bool need_grad_in = true) {
         // Delta é o gradiente da perda em relação à soma antes da ativação.
         // Na ReLU, o gradiente passa apenas quando essa soma é positiva.
         vector<float> delta(out_features);
@@ -73,8 +76,8 @@ public:
         }
 
         // O gradiente da entrada usa os pesos anteriores à atualização.
-        vector<float> grad_in(in_features);
-        for (int i = 0; i < in_features; ++i) {
+        vector<float> grad_in(need_grad_in ? in_features : 0);
+        for (int i = 0; i < (need_grad_in ? in_features : 0); ++i) {
             float sum = 0;
             for (int j = 0; j < out_features; ++j) {
                 sum += delta[j] * weights[j][i];
@@ -286,7 +289,8 @@ int main(int argc, char** argv) {
                 // Cada Backward também atualiza os parâmetros da sua camada.
                 auto grad3 = l3.Backward(gradiente, taxa);
                 auto grad2 = l2.Backward(grad3, taxa);
-                l1.Backward(grad2, taxa);
+                // A entrada da rede não tem parâmetros: dispensa o grad_in de l1.
+                l1.Backward(grad2, taxa, false);
             }
             perdas[epoca] = perda_total / treino.size();
         }
