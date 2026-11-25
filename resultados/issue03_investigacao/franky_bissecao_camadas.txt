@@ -1,0 +1,4 @@
+none Tempo de treino: media 0.4235 s | dp 0.0003 s | min 0.4231 s | max 0.4239 s
+l1l2 Tempo de treino: media 0.4267 s | dp 0.0005 s | min 0.4257 s | max 0.4272 s
+l2l3 Tempo de treino: media 0.4269 s | dp 0.0004 s | min 0.4265 s | max 0.4276 s
+l3g Tempo de treino: media 0.4273 s | dp 0.0004 s | min 0.4266 s | max 0.4276 s

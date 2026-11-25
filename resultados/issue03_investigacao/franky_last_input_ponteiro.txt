@@ -1,0 +1,5 @@
+OK: saida identica a referencia (ref_output.txt)
+barenn_v01
+Tempo de treino: media 0.3674 s | dp 0.0011 s | min 0.3662 s | max 0.3690 s
+barenn_ptr
+Tempo de treino: media 0.4337 s | dp 0.0003 s | min 0.4332 s | max 0.4341 s
