@@ -17,6 +17,7 @@ echo "Kernel:     $(uname -r)"
 lscpu | grep -E '^(Model name|CPU\(s\)|Thread\(s\) per core|Core\(s\) per socket|Socket\(s\)|L1d|L2|L3)' || true
 echo "RAM:        $(free -h | awk '/^Mem/ {print $2}')"
 echo "Compilador: $(${CXX:-g++} --version | head -1)"
+echo "Threads:    OMP_NUM_THREADS=${OMP_NUM_THREADS:-padrao} | nproc=$(nproc)"
 if command -v nvidia-smi >/dev/null; then
     echo "GPU:        $(nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader)"
 fi

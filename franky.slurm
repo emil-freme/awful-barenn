@@ -8,7 +8,7 @@
 #SBATCH --output=resultados/franky_%j.txt
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=8
 #SBATCH --mem=2G
 #SBATCH --time=00:10:00
 #SBATCH --partition=sunny_cpu
