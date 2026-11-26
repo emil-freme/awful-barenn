@@ -85,10 +85,12 @@ public:
         // SGD por amostra. O gradiente do peso é delta vezes a entrada.
         // O gradiente do viés é o próprio delta.
         for (int i = 0; i < out_features; ++i) {
+            const float delta_atual = delta[i];
+            #pragma omp simd
             for (int j = 0; j < in_features; ++j) {
-                weights[i][j] -= learning_rate * (delta[i] * last_input[j]);
+                weights[i][j] -= learning_rate * (delta_atual * last_input[j]);
             }
-            bias[i] -= learning_rate * delta[i];
+            bias[i] -= learning_rate * delta_atual;
         }
         return grad_in;
     }
