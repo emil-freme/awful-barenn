@@ -1,0 +1,12 @@
+# Binários e saídas de profiling geradas localmente
+barenn
+barenn_baseline
+profiling/
+callgrind.out.*
+cachegrind.out.*
+!callgrind.out.45358
+# Relatorios binarios do Nsight (grandes demais para o git; o resumo em texto fica em resultados/)
+*.nsys-rep
+*.sqlite
+*.ncu-rep
+barenn_cuda

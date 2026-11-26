@@ -1,0 +1,19 @@
+compute10
+v01
+Binario: ./barenn_v01 | Execucoes: 5
+Tempo de treino: media 0.3663 s | dp 0.0001 s | min 0.3661 s | max 0.3665 s
+v03
+Binario: ./barenn | Execucoes: 5
+Tempo de treino: media 0.4234 s | dp 0.0003 s | min 0.4228 s | max 0.4237 s
+v01
+Binario: ./barenn_v01 | Execucoes: 5
+Tempo de treino: media 0.3666 s | dp 0.0007 s | min 0.3660 s | max 0.3680 s
+v03
+Binario: ./barenn | Execucoes: 5
+Tempo de treino: media 0.4234 s | dp 0.0005 s | min 0.4230 s | max 0.4243 s
+v01
+Binario: ./barenn_v01 | Execucoes: 5
+Tempo de treino: media 0.3675 s | dp 0.0012 s | min 0.3662 s | max 0.3695 s
+v03
+Binario: ./barenn | Execucoes: 5
+Tempo de treino: media 0.4236 s | dp 0.0007 s | min 0.4229 s | max 0.4245 s

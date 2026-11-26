@@ -1,0 +1,31 @@
+===== AMBIENTE =====
+Host:       luizmmb-Legion-5-15ACH6
+Data:       2026-11-25T20:31:26-03:00
+Commit:     v0.1-grad-in-morto-7-g433d3ae
+Kernel:     6.17.0-35-generic
+CPU(s):                                  16
+Model name:                              AMD Ryzen 7 5800H with Radeon Graphics
+Thread(s) per core:                      2
+Core(s) per socket:                      8
+Socket(s):                               1
+CPU(s) scaling MHz:                      76%
+L1d cache:                               256 KiB (8 instances)
+L2 cache:                                4 MiB (8 instances)
+L3 cache:                                16 MiB (1 instance)
+RAM:        31Gi
+Compilador: g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+Threads:    OMP_NUM_THREADS=8 | nproc=8
+GPU:        NVIDIA GeForce RTX 3050 Laptop GPU, 4096 MiB, 580.173.02
+
+===== BUILD =====
+g++ -O3 -march=x86-64-v3 -ffp-contract=off -fopenmp -g -std=c++17 -Wall -Wextra barenn.cpp -o barenn
+
+===== VALIDACAO =====
+./validate.sh ./barenn
+OK: saida identica a referencia (ref_output.txt)
+
+===== BENCHMARK (N=10) =====
+Binario: ./barenn | Execucoes: 10 | OMP_NUM_THREADS=8
+Tempo de treino: media 0.1856 s | dp 0.0025 s | min 0.1823 s | max 0.1915 s
+Tempo de leitura: media 0.0073 s | dp 0.0013 s | min 0.0059 s | max 0.0090 s
+Tempo total: media 0.1937 s | dp 0.0035 s | min 0.1894 s | max 0.2011 s

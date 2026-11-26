@@ -1,0 +1,4 @@
+Codigo da Issue 3 compilado com -O3 -march=x86-64-v3 -ffp-contract=off (sem transposicao)
+OK: saida identica a referencia (ref_output.txt)
+Binario: /tmp/claude-1000/-home-luizmmb-APS2-supercomp-awful-barenn/73f4f3c1-d838-4c64-9841-be7e0491c59a/scratchpad/o3v3nc | Execucoes: 10
+Tempo de treino: media 0.3129 s | dp 0.0026 s | min 0.3080 s | max 0.3172 s

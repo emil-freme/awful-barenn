@@ -1,0 +1,6 @@
+compute10
+P=0 Tempo de treino: media 0.4231 s | dp 0.0005 s | min 0.4223 s | max 0.4238 s
+P=8 Tempo de treino: media 0.3345 s | dp 0.0003 s | min 0.3340 s | max 0.3348 s
+P=64 Tempo de treino: media 0.3344 s | dp 0.0001 s | min 0.3342 s | max 0.3346 s
+P=256 Tempo de treino: media 0.3344 s | dp 0.0001 s | min 0.3341 s | max 0.3345 s
+Tempo de treino: media 0.3668 s | dp 0.0004 s | min 0.3663 s | max 0.3675 s
