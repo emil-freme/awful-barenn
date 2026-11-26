@@ -32,21 +32,21 @@ struct Evento {
     Evento& operator=(const Evento&) = delete;
 };
 
-template<int In, int Out, bool Final>
+template<int In, int Out, bool Final, int Stride = In>
 __device__ void forward(const float* pesos, const float* bias,
                         const float* entrada, float* z, float* saida) {
     int i = threadIdx.x;
     if (i < Out) {
         float soma = bias[i];
         for (int j = 0; j < In; ++j)
-            soma += entrada[j] * pesos[i * In + j];
+            soma += entrada[j] * pesos[i * Stride + j];
         z[i] = soma;
         saida[i] = Final ? soma : fmaxf(0.0f, soma);
     }
     __syncthreads();
 }
 
-template<int In, int Out, bool Final>
+template<int In, int Out, bool Final, int Stride = In>
 __device__ void backward(float* pesos, float* bias, const float* entrada,
                          const float* z, const float* grad_out,
                          float* delta, float* grad_in, float taxa) {
@@ -58,32 +58,53 @@ __device__ void backward(float* pesos, float* bias, const float* entrada,
     if (i < In) {
         float soma = 0;
         for (int j = 0; j < Out; ++j)
-            soma += delta[j] * pesos[j * In + i];
+            soma += delta[j] * pesos[j * Stride + i];
         grad_in[i] = soma;
     }
     // Todos terminam de ler os pesos antigos antes das atualizacoes.
     __syncthreads();
     if (i < Out) {
         for (int j = 0; j < In; ++j)
-            pesos[i * In + j] -= taxa * (delta[i] * entrada[j]);
+            pesos[i * Stride + j] -= taxa * (delta[i] * entrada[j]);
         bias[i] -= taxa * delta[i];
     }
     __syncthreads();
 }
 
-__global__ void treinar_epoca(float* parametros, const float* imagens,
+// Converte o indice compacto para linhas com uma coluna extra.
+__device__ int indice_compartilhado(int i) {
+    if (i < 2048) return i + i / 64;
+    if (i < 2080) return i + 32;
+    if (i < 2592) {
+        int k = i - 2080;
+        return 2112 + k + k / 32;
+    }
+    if (i < 2608) return i + 48;
+    if (i < 2768) {
+        int k = i - 2608;
+        return 2656 + k + k / 16;
+    }
+    return i + 58;
+}
+
+__global__ void treinar_epoca(float* parametros_globais, const float* imagens,
                                 const int* rotulos, int quantidade,
                                 double* perdas, int epoca, float taxa) {
+    __shared__ float parametros[2836];
     __shared__ float entrada[64], a1[32], a2[16], escores[10];
     __shared__ float z1[32], z2[16], z3[10], gradiente[10];
     __shared__ float d1[32], d2[16], d3[10];
     __shared__ float g1[64], g2[32], g3[16];
+    for (int i = threadIdx.x; i < 2778; i += blockDim.x)
+        parametros[indice_compartilhado(i)] = parametros_globais[i];
+    __syncthreads();
+
     for (int amostra = 0; amostra < quantidade; ++amostra) {
         entrada[threadIdx.x] = imagens[amostra * 64 + threadIdx.x];
         __syncthreads();
-        forward<64, 32, false>(parametros, parametros + 2048, entrada, z1, a1);
-        forward<32, 16, false>(parametros + 2080, parametros + 2592, a1, z2, a2);
-        forward<16, 10, true>(parametros + 2608, parametros + 2768, a2, z3, escores);
+        forward<64, 32, false, 65>(parametros, parametros + 2080, entrada, z1, a1);
+        forward<32, 16, false, 33>(parametros + 2112, parametros + 2640, a1, z2, a2);
+        forward<16, 10, true, 17>(parametros + 2656, parametros + 2826, a2, z3, escores);
         if (threadIdx.x == 0) {
             float total = 0;
             for (int i = 0; i < 10; ++i) {
@@ -94,13 +115,16 @@ __global__ void treinar_epoca(float* parametros, const float* imagens,
             perdas[epoca] += static_cast<double>(total);
         }
         __syncthreads();
-        backward<16, 10, true>(parametros + 2608, parametros + 2768,
+        backward<16, 10, true, 17>(parametros + 2656, parametros + 2826,
             a2, z3, gradiente, d3, g3, taxa);
-        backward<32, 16, false>(parametros + 2080, parametros + 2592,
+        backward<32, 16, false, 33>(parametros + 2112, parametros + 2640,
             a1, z2, g3, d2, g2, taxa);
-        backward<64, 32, false>(parametros, parametros + 2048,
+        backward<64, 32, false, 65>(parametros, parametros + 2080,
             entrada, z1, g2, d1, g1, taxa);
     }
+
+    for (int i = threadIdx.x; i < 2778; i += blockDim.x)
+        parametros_globais[i] = parametros[indice_compartilhado(i)];
 }
 
 struct Tempos { float treino_ms, h2d_ms, d2h_ms; };
