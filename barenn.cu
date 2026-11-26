@@ -71,34 +71,36 @@ __device__ void backward(float* pesos, float* bias, const float* entrada,
     __syncthreads();
 }
 
-__global__ void treinar_amostra(float* parametros, const float* imagens,
-                                const int* rotulos, int amostra,
+__global__ void treinar_epoca(float* parametros, const float* imagens,
+                                const int* rotulos, int quantidade,
                                 double* perdas, int epoca, float taxa) {
     __shared__ float entrada[64], a1[32], a2[16], escores[10];
     __shared__ float z1[32], z2[16], z3[10], gradiente[10];
     __shared__ float d1[32], d2[16], d3[10];
     __shared__ float g1[64], g2[32], g3[16];
-    entrada[threadIdx.x] = imagens[amostra * 64 + threadIdx.x];
-    __syncthreads();
-    forward<64, 32, false>(parametros, parametros + 2048, entrada, z1, a1);
-    forward<32, 16, false>(parametros + 2080, parametros + 2592, a1, z2, a2);
-    forward<16, 10, true>(parametros + 2608, parametros + 2768, a2, z3, escores);
-    if (threadIdx.x == 0) {
-        float total = 0;
-        for (int i = 0; i < 10; ++i) {
-            float erro = escores[i] - (i == rotulos[amostra] ? 1.0f : 0.0f);
-            total += 0.5f * erro * erro;
-            gradiente[i] = erro;
+    for (int amostra = 0; amostra < quantidade; ++amostra) {
+        entrada[threadIdx.x] = imagens[amostra * 64 + threadIdx.x];
+        __syncthreads();
+        forward<64, 32, false>(parametros, parametros + 2048, entrada, z1, a1);
+        forward<32, 16, false>(parametros + 2080, parametros + 2592, a1, z2, a2);
+        forward<16, 10, true>(parametros + 2608, parametros + 2768, a2, z3, escores);
+        if (threadIdx.x == 0) {
+            float total = 0;
+            for (int i = 0; i < 10; ++i) {
+                float erro = escores[i] - (i == rotulos[amostra] ? 1.0f : 0.0f);
+                total += 0.5f * erro * erro;
+                gradiente[i] = erro;
+            }
+            perdas[epoca] += static_cast<double>(total);
         }
-        perdas[epoca] += static_cast<double>(total);
+        __syncthreads();
+        backward<16, 10, true>(parametros + 2608, parametros + 2768,
+            a2, z3, gradiente, d3, g3, taxa);
+        backward<32, 16, false>(parametros + 2080, parametros + 2592,
+            a1, z2, g3, d2, g2, taxa);
+        backward<64, 32, false>(parametros, parametros + 2048,
+            entrada, z1, g2, d1, g1, taxa);
     }
-    __syncthreads();
-    backward<16, 10, true>(parametros + 2608, parametros + 2768,
-        a2, z3, gradiente, d3, g3, taxa);
-    backward<32, 16, false>(parametros + 2080, parametros + 2592,
-        a1, z2, g3, d2, g2, taxa);
-    backward<64, 32, false>(parametros, parametros + 2048,
-        entrada, z1, g2, d1, g1, taxa);
 }
 
 struct Tempos { float treino_ms, h2d_ms, d2h_ms; };
@@ -133,11 +135,11 @@ Tempos treinar(Barenn::DenseLayer& l1, Barenn::DenseLayer& l2,
     verificar(cudaEventElapsedTime(&tempos.h2d_ms, inicio.evento, fim.evento), "tempo H2D");
     verificar(cudaMemset(dl.ptr, 0, epocas * sizeof(double)), "zerar perdas");
     verificar(cudaEventRecord(inicio.evento), "inicio treino");
-    for (int epoca = 0; epoca < epocas; ++epoca)
-        for (int i = 0; i < static_cast<int>(treino.size()); ++i) {
-            treinar_amostra<<<1, 64>>>(dp.ptr, dx.ptr, dy.ptr, i, dl.ptr, epoca, taxa);
-            verificar(cudaGetLastError(), "launch treinar_amostra");
-        }
+    for (int epoca = 0; epoca < epocas; ++epoca) {
+        treinar_epoca<<<1, 64>>>(dp.ptr, dx.ptr, dy.ptr,
+            static_cast<int>(treino.size()), dl.ptr, epoca, taxa);
+        verificar(cudaGetLastError(), "launch treinar_epoca");
+    }
     verificar(cudaEventRecord(fim.evento), "fim treino");
     verificar(cudaEventSynchronize(fim.evento), "sincronizar treino");
     verificar(cudaEventElapsedTime(&tempos.treino_ms, inicio.evento, fim.evento), "tempo treino");
