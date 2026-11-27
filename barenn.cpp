@@ -224,14 +224,19 @@ void avaliar(const DenseLayer& l1, const DenseLayer& l2, const DenseLayer& l3,
     // ativações locais e escreve só nos escores da própria imagem.
     const long n = static_cast<long>(teste.size());
     vector<float> escores_todos(static_cast<size_t>(n) * classes);
+    // A região paralela recebe cópias das camadas. Se recebesse o endereço das
+    // camadas do treino, o compilador passaria a supor que elas podem mudar a
+    // qualquer momento e recarregaria seus campos no laço de treino (1,6x mais
+    // lento, ver issue).
+    const DenseLayer c1 = l1, c2 = l2, c3 = l3;
     const double inicio = omp_get_wtime();
     #pragma omp parallel for schedule(runtime)
     for (long i = 0; i < n; ++i) {
         array<float, oculta1> a1;
         array<float, oculta2> a2;
-        l1.Inferir(teste.imagem(i), a1.data());
-        l2.Inferir(a1.data(), a2.data());
-        l3.Inferir(a2.data(), &escores_todos[i * classes]);
+        c1.Inferir(teste.imagem(i), a1.data());
+        c2.Inferir(a1.data(), a2.data());
+        c3.Inferir(a2.data(), &escores_todos[i * classes]);
     }
     const double tempo = omp_get_wtime() - inicio;
 
