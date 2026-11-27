@@ -1,3 +1,5 @@
+#include <omp.h>
+
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -127,13 +129,23 @@ Dados ler_dados(const string& caminho) {
         throw runtime_error("Não foi possível abrir " + caminho);
     }
 
-    Dados dados;
+    // A leitura do disco é sequencial; o parsing de cada linha é independente.
+    vector<string> linhas;
     string linha;
-    size_t numero_linha = 0;
     while (getline(arquivo, linha)) {
-        ++numero_linha;
-        istringstream campos(linha);
-        array<float, entradas> imagem;
+        linhas.push_back(move(linha));
+    }
+    const long n = static_cast<long>(linhas.size());
+
+    Dados dados;
+    dados.imagens.resize(static_cast<size_t>(n) * entradas);
+    dados.rotulos.resize(n);
+    vector<char> invalida(n, 0);
+
+    #pragma omp parallel for schedule(runtime)
+    for (long i = 0; i < n; ++i) {
+        istringstream campos(linhas[i]);
+        float* imagem = &dados.imagens[i * entradas];
         int lidos = 0;
         int rotulo = -1;
         // Cada atributo deve ser seguido por vírgula, inclusive o último.
@@ -152,11 +164,17 @@ Dados ler_dados(const string& caminho) {
             !(campos >> rotulo) ||
             rotulo < 0 || rotulo >= classes ||
             !(campos >> ws).eof()) {
-            throw runtime_error(caminho + ":" + to_string(numero_linha) +
+            invalida[i] = 1;  // cada thread só escreve na sua posição
+        }
+        dados.rotulos[i] = rotulo;
+    }
+
+    // O erro reportado é o da primeira linha inválida, como no legado.
+    for (long i = 0; i < n; ++i) {
+        if (invalida[i]) {
+            throw runtime_error(caminho + ":" + to_string(i + 1) +
                 " — esperados 64 atributos de 0 a 16 e um rótulo inteiro de 0 a 9");
         }
-        dados.imagens.insert(dados.imagens.end(), imagem.begin(), imagem.end());
-        dados.rotulos.push_back(rotulo);
     }
     if (arquivo.bad() || dados.size() == 0) {
         throw runtime_error("Falha de leitura ou arquivo vazio: " + caminho);
@@ -281,8 +299,10 @@ int main(int argc, char** argv) {
     const string arquivo_teste = argc == 3 ? argv[2] : "optdigits.tes";
 
     try {
+        const double inicio_programa = omp_get_wtime();
         const auto treino = Barenn::ler_dados(arquivo_treino);
         const auto teste = Barenn::ler_dados(arquivo_teste);
+        const double tempo_leitura = omp_get_wtime() - inicio_programa;
         if (filesystem::equivalent(arquivo_treino, arquivo_teste)) {
             throw runtime_error("Use arquivos distintos para treino e teste.");
         }
@@ -323,6 +343,8 @@ int main(int argc, char** argv) {
                  << " | perda media " << perdas[epoca] << "\n";
         }
         cout << "Tempo de treino " << tempo.count() << " s\n";
+        cout << "Tempo de leitura " << setprecision(6) << tempo_leitura << " s\n"
+             << setprecision(4);
         Barenn::avaliar(l1, l2, l3, teste);
     } catch (const exception& erro) {
         cerr << "Erro: " << erro.what() << "\n";
