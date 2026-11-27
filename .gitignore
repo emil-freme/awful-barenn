@@ -1,0 +1,6 @@
+# binário
+barenn
+
+# saídas geradas (as evidências vão para docs/evidencias e para as issues)
+callgrind.out.*
+barenn-*.out
