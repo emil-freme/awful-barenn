@@ -4,6 +4,7 @@
 |---|---|---:|---:|---|---|
 | legado | código original, `g++ barenn.cpp` sem flags | 5,19 | 0,07x | [#1](https://github.com/felipebns/awful-barenn/issues/1) | – |
 | **v0.1** (baseline) | Makefile `-O3`, referência e scripts | 0,354 | 1,00x | [#1](https://github.com/felipebns/awful-barenn/issues/1) | [`v0.1-baseline`](https://github.com/felipebns/awful-barenn/releases/tag/v0.1-baseline) |
+| v0.2 | sem trabalho inútil, pesos contíguos, sem cópias, `-mavx2` | 0,127 | 2,78x | [#3](https://github.com/felipebns/awful-barenn/issues/3) | [`v0.2-cpu-memoria`](https://github.com/felipebns/awful-barenn/releases/tag/v0.2-cpu-memoria) |
 
 Treino: 51 épocas com `optdigits.tra`, média de 5 execuções no Franky (compute10, i7-13700T, g++ 14.2), todas as versões no mesmo job. Todas geram a mesma saída do legado (`scripts/validar.sh`).
 
