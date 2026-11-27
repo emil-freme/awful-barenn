@@ -1,7 +1,10 @@
+#include <omp.h>
+
 #include <algorithm>
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -20,6 +23,8 @@ namespace Barenn {
 // Cada imagem tem 64 atributos e pertence a uma das dez classes.
 constexpr int entradas = 64;
 constexpr int classes = 10;
+constexpr int oculta1 = 32;
+constexpr int oculta2 = 16;
 
 class DenseLayer {
     int in_features;
@@ -74,6 +79,26 @@ public:
         return out.data();
     }
 
+    // Forward sem efeito colateral: não escreve nos buffers da camada, então
+    // várias threads podem chamar ao mesmo tempo. Mesma conta do Forward.
+    void Inferir(const float* input, float* saida) const {
+        for (int i = 0; i < out_features; ++i) {
+            saida[i] = bias[i];
+        }
+        for (int j = 0; j < in_features; ++j) {
+            const float x = input[j];
+            const float* w = &weights[j * out_features];
+            for (int i = 0; i < out_features; ++i) {
+                saida[i] += x * w[i];
+            }
+        }
+        if (!final) {
+            for (int i = 0; i < out_features; ++i) {
+                saida[i] = max(0.0f, saida[i]);
+            }
+        }
+    }
+
     // a primeira camada não precisa do gradiente da entrada
     const float* Backward(const float* grad_out, float learning_rate,
                           bool propagate = true) {
@@ -98,6 +123,12 @@ public:
 
         // SGD por amostra. O gradiente do peso é delta vezes a entrada.
         // O gradiente do viés é o próprio delta.
+        // Experimento (make OPT="-O3 -DOMP_NA_AMOSTRA"): divide a atualização entre
+        // threads dentro de cada amostra. O resultado é o mesmo, mas abre uma
+        // região paralela por camada por amostra.
+#ifdef OMP_NA_AMOSTRA
+        #pragma omp parallel for schedule(static)
+#endif
         for (int j = 0; j < in_features; ++j) {
             const float x = last_input[j];
             float* w = &weights[j * out_features];
@@ -127,13 +158,23 @@ Dados ler_dados(const string& caminho) {
         throw runtime_error("Não foi possível abrir " + caminho);
     }
 
-    Dados dados;
+    // A leitura do disco é sequencial; o parsing de cada linha é independente.
+    vector<string> linhas;
     string linha;
-    size_t numero_linha = 0;
     while (getline(arquivo, linha)) {
-        ++numero_linha;
-        istringstream campos(linha);
-        array<float, entradas> imagem;
+        linhas.push_back(move(linha));
+    }
+    const long n = static_cast<long>(linhas.size());
+
+    Dados dados;
+    dados.imagens.resize(static_cast<size_t>(n) * entradas);
+    dados.rotulos.resize(n);
+    vector<char> invalida(n, 0);
+
+    #pragma omp parallel for schedule(runtime)
+    for (long i = 0; i < n; ++i) {
+        istringstream campos(linhas[i]);
+        float* imagem = &dados.imagens[i * entradas];
         int lidos = 0;
         int rotulo = -1;
         // Cada atributo deve ser seguido por vírgula, inclusive o último.
@@ -152,11 +193,17 @@ Dados ler_dados(const string& caminho) {
             !(campos >> rotulo) ||
             rotulo < 0 || rotulo >= classes ||
             !(campos >> ws).eof()) {
-            throw runtime_error(caminho + ":" + to_string(numero_linha) +
+            invalida[i] = 1;  // cada thread só escreve na sua posição
+        }
+        dados.rotulos[i] = rotulo;
+    }
+
+    // O erro reportado é o da primeira linha inválida, como no legado.
+    for (long i = 0; i < n; ++i) {
+        if (invalida[i]) {
+            throw runtime_error(caminho + ":" + to_string(i + 1) +
                 " — esperados 64 atributos de 0 a 16 e um rótulo inteiro de 0 a 9");
         }
-        dados.imagens.insert(dados.imagens.end(), imagem.begin(), imagem.end());
-        dados.rotulos.push_back(rotulo);
     }
     if (arquivo.bad() || dados.size() == 0) {
         throw runtime_error("Falha de leitura ou arquivo vazio: " + caminho);
@@ -178,8 +225,28 @@ float perda(const float* escores, int rotulo, float* gradiente = nullptr) {
     return total;
 }
 
-void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3,
+void avaliar(const DenseLayer& l1, const DenseLayer& l2, const DenseLayer& l3,
              const Dados& teste) {
+    // Parte paralela: o forward de cada imagem é independente. Cada thread usa
+    // ativações locais e escreve só nos escores da própria imagem.
+    const long n = static_cast<long>(teste.size());
+    vector<float> escores_todos(static_cast<size_t>(n) * classes);
+    // A região paralela recebe cópias das camadas. Se recebesse o endereço das
+    // camadas do treino, o compilador passaria a supor que elas podem mudar a
+    // qualquer momento e recarregaria seus campos no laço de treino (1,6x mais
+    // lento, ver issue).
+    const DenseLayer c1 = l1, c2 = l2, c3 = l3;
+    const double inicio = omp_get_wtime();
+    #pragma omp parallel for schedule(runtime)
+    for (long i = 0; i < n; ++i) {
+        array<float, oculta1> a1;
+        array<float, oculta2> a2;
+        c1.Inferir(teste.imagem(i), a1.data());
+        c2.Inferir(a1.data(), a2.data());
+        c3.Inferir(a2.data(), &escores_todos[i * classes]);
+    }
+    const double tempo = omp_get_wtime() - inicio;
+
     struct Exemplo {
         size_t linha;
         int real;
@@ -200,7 +267,7 @@ void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3,
     // Só fazemos forward aqui. Os pesos ficam fixos.
     for (size_t i = 0; i < teste.size(); ++i) {
         const int rotulo = teste.rotulos[i];
-        const float* escores = l3.Forward(l2.Forward(l1.Forward(teste.imagem(i))));
+        const float* escores = &escores_todos[i * classes];
         // O índice do maior escore indica a classe prevista.
         int previsto = static_cast<int>(max_element(escores, escores + classes) - escores);
         bool acertou = previsto == rotulo;
@@ -268,6 +335,8 @@ void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3,
                 << "  " << setw(11) << erro.ocorrencias << '\n';
         }
     }
+    cout << "Tempo de avaliacao " << setprecision(6) << tempo << " s | "
+         << omp_get_max_threads() << " thread(s)\n";
 }
 
 } // namespace Barenn
@@ -279,10 +348,17 @@ int main(int argc, char** argv) {
     }
     const string arquivo_treino = argc == 3 ? argv[1] : "optdigits.tra";
     const string arquivo_teste = argc == 3 ? argv[2] : "optdigits.tes";
+    // Sem OMP_SCHEDULE a libgomp usa dynamic com chunk 1, o pior na avaliação
+    // (ver issue #5). Com a variável definida, vale o que ela pedir.
+    if (!getenv("OMP_SCHEDULE")) {
+        omp_set_schedule(omp_sched_guided, 0);
+    }
 
     try {
+        const double inicio_programa = omp_get_wtime();
         const auto treino = Barenn::ler_dados(arquivo_treino);
         const auto teste = Barenn::ler_dados(arquivo_teste);
+        const double tempo_leitura = omp_get_wtime() - inicio_programa;
         if (filesystem::equivalent(arquivo_treino, arquivo_teste)) {
             throw runtime_error("Use arquivos distintos para treino e teste.");
         }
@@ -290,9 +366,9 @@ int main(int argc, char** argv) {
         constexpr int epocas = 51;
         constexpr float taxa = 0.02f;
         // Rede densa com dimensões 64 -> 32 -> 16 -> 10.
-        Barenn::DenseLayer l1(Barenn::entradas, 32);
-        Barenn::DenseLayer l2(32, 16);
-        Barenn::DenseLayer l3(16, Barenn::classes, true);
+        Barenn::DenseLayer l1(Barenn::entradas, Barenn::oculta1);
+        Barenn::DenseLayer l2(Barenn::oculta1, Barenn::oculta2);
+        Barenn::DenseLayer l3(Barenn::oculta2, Barenn::classes, true);
         array<float, Barenn::classes> gradiente{};
         array<double, epocas> perdas{};
 
@@ -323,7 +399,11 @@ int main(int argc, char** argv) {
                  << " | perda media " << perdas[epoca] << "\n";
         }
         cout << "Tempo de treino " << tempo.count() << " s\n";
+        cout << "Tempo de leitura " << setprecision(6) << tempo_leitura << " s\n"
+             << setprecision(4);
         Barenn::avaliar(l1, l2, l3, teste);
+        cout << "Tempo de execucao " << setprecision(6)
+             << omp_get_wtime() - inicio_programa << " s\n";
     } catch (const exception& erro) {
         cerr << "Erro: " << erro.what() << "\n";
         return 1;

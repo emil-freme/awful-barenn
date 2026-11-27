@@ -1,0 +1,286 @@
+Job 31094 | nó compute10 | Fri Nov 27 02:07:04 PM EST 2026 | cpus-per-task=16
+CPU(s):                               24
+Model name:                           13th Gen Intel(R) Core(TM) i7-13700T
+Thread(s) per core:                   2
+Core(s) per socket:                   16
+CPU(s) scaling MHz:                   28%
+L1d cache:                            640 KiB (16 instances)
+L2 cache:                             24 MiB (10 instances)
+L3 cache:                             30 MiB (1 instance)
+g++ (GCC) 14.2.0
+===== v0.3: com e sem as cópias das camadas (1 thread)
+-- v03_sem_copias_avx2
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.126780 s | desvio 0.000789 s | min 0.125400 s | valores: 0.1271 0.1254 0.1270 0.1274 0.1270
+Tempo de leitura    n=5 | media 0.021107 s | desvio 0.000289 s | min 0.020861 s | valores: 0.021308 0.020886 0.020968 0.021513 0.020861
+Tempo de avaliacao  n=5 | media 0.000323 s | desvio 0.000001 s | min 0.000322 s | valores: 0.000322 0.000323 0.000324 0.000325 0.000323
+Tempo de execucao   n=5 | media 0.148315 s | desvio 0.000980 s | min 0.146722 s | valores: 0.148790 0.146722 0.148416 0.149350 0.148295
+-- v03_avx2
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127800 s | desvio 0.000367 s | min 0.127500 s | valores: 0.1279 0.1276 0.1276 0.1275 0.1284
+Tempo de leitura    n=5 | media 0.021066 s | desvio 0.000260 s | min 0.020790 s | valores: 0.021304 0.020946 0.020790 0.020908 0.021380
+Tempo de avaliacao  n=5 | media 0.000327 s | desvio 0.000005 s | min 0.000321 s | valores: 0.000326 0.000321 0.000327 0.000334 0.000326
+Tempo de execucao   n=5 | media 0.149275 s | desvio 0.000606 s | min 0.148816 s | valores: 0.149589 0.148945 0.148826 0.148816 0.150197
+===== v0.3: threads x schedule
+----- static | 1 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127660 s | desvio 0.000261 s | min 0.127300 s | valores: 0.1278 0.1276 0.1273 0.1276 0.1280
+Tempo de leitura    n=5 | media 0.021055 s | desvio 0.000313 s | min 0.020770 s | valores: 0.021411 0.020909 0.020770 0.020809 0.021375
+Tempo de avaliacao  n=5 | media 0.000322 s | desvio 0.000003 s | min 0.000319 s | valores: 0.000322 0.000320 0.000321 0.000327 0.000319
+Tempo de execucao   n=5 | media 0.149107 s | desvio 0.000528 s | min 0.148484 s | valores: 0.149567 0.148951 0.148484 0.148796 0.149735
+-- x50
+Tempo de treino     n=5 | media 0.128040 s | desvio 0.001993 s | min 0.127000 s | valores: 0.1272 0.1316 0.1273 0.1271 0.1270
+Tempo de leitura    n=5 | media 0.345214 s | desvio 0.000639 s | min 0.344170 s | valores: 0.345340 0.345356 0.344170 0.345277 0.345925
+Tempo de avaliacao  n=5 | media 0.014969 s | desvio 0.000467 s | min 0.014478 s | valores: 0.014478 0.014639 0.014873 0.015644 0.015212
+Tempo de execucao   n=5 | media 0.488888 s | desvio 0.002046 s | min 0.487034 s | valores: 0.487642 0.492308 0.487034 0.488662 0.488796
+----- static | 2 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127840 s | desvio 0.000114 s | min 0.127700 s | valores: 0.1280 0.1278 0.1277 0.1278 0.1279
+Tempo de leitura    n=5 | media 0.011497 s | desvio 0.000106 s | min 0.011399 s | valores: 0.011669 0.011511 0.011399 0.011484 0.011421
+Tempo de avaliacao  n=5 | media 0.000303 s | desvio 0.000037 s | min 0.000255 s | valores: 0.000331 0.000326 0.000255 0.000332 0.000271
+Tempo de execucao   n=5 | media 0.139697 s | desvio 0.000234 s | min 0.139442 s | valores: 0.140080 0.139678 0.139442 0.139657 0.139628
+-- x50
+Tempo de treino     n=5 | media 0.127340 s | desvio 0.000602 s | min 0.126900 s | valores: 0.1269 0.1271 0.1272 0.1271 0.1284
+Tempo de leitura    n=5 | media 0.186576 s | desvio 0.000458 s | min 0.186122 s | valores: 0.186787 0.186122 0.186512 0.187247 0.186210
+Tempo de avaliacao  n=5 | media 0.007618 s | desvio 0.000319 s | min 0.007408 s | valores: 0.007499 0.007408 0.008184 0.007477 0.007522
+Tempo de execucao   n=5 | media 0.322208 s | desvio 0.000617 s | min 0.321322 s | valores: 0.321811 0.321322 0.322603 0.322536 0.322770
+----- static | 4 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127500 s | desvio 0.001168 s | min 0.126500 s | valores: 0.1293 0.1280 0.1266 0.1265 0.1271
+Tempo de leitura    n=5 | media 0.006348 s | desvio 0.000084 s | min 0.006263 s | valores: 0.006471 0.006352 0.006278 0.006376 0.006263
+Tempo de avaliacao  n=5 | media 0.000271 s | desvio 0.000036 s | min 0.000215 s | valores: 0.000315 0.000279 0.000280 0.000215 0.000266
+Tempo de execucao   n=5 | media 0.134219 s | desvio 0.001286 s | min 0.133179 s | valores: 0.136211 0.134766 0.133202 0.133179 0.133735
+-- x50
+Tempo de treino     n=5 | media 0.127140 s | desvio 0.000321 s | min 0.126800 s | valores: 0.1269 0.1273 0.1276 0.1271 0.1268
+Tempo de leitura    n=5 | media 0.100102 s | desvio 0.000313 s | min 0.099681 s | valores: 0.099944 0.100131 0.100238 0.100516 0.099681
+Tempo de avaliacao  n=5 | media 0.004056 s | desvio 0.000067 s | min 0.003984 s | valores: 0.004028 0.004096 0.004152 0.004022 0.003984
+Tempo de execucao   n=5 | media 0.231975 s | desvio 0.000596 s | min 0.231155 s | valores: 0.231586 0.232183 0.232634 0.232318 0.231155
+----- static | 8 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.128180 s | desvio 0.000249 s | min 0.128000 s | valores: 0.1286 0.1282 0.1280 0.1280 0.1281
+Tempo de leitura    n=5 | media 0.004282 s | desvio 0.000060 s | min 0.004221 s | valores: 0.004221 0.004338 0.004222 0.004281 0.004346
+Tempo de avaliacao  n=5 | media 0.000275 s | desvio 0.000062 s | min 0.000196 s | valores: 0.000323 0.000196 0.000221 0.000327 0.000307
+Tempo de execucao   n=5 | media 0.132844 s | desvio 0.000238 s | min 0.132570 s | valores: 0.133217 0.132860 0.132570 0.132736 0.132838
+-- x50
+Tempo de treino     n=5 | media 0.128060 s | desvio 0.001856 s | min 0.126700 s | valores: 0.1274 0.1313 0.1267 0.1278 0.1271
+Tempo de leitura    n=5 | media 0.064544 s | desvio 0.003339 s | min 0.062622 s | valores: 0.070479 0.062622 0.063323 0.063536 0.062760
+Tempo de avaliacao  n=5 | media 0.002488 s | desvio 0.000079 s | min 0.002367 s | valores: 0.002457 0.002367 0.002517 0.002572 0.002528
+Tempo de execucao   n=5 | media 0.195818 s | desvio 0.003285 s | min 0.193131 s | valores: 0.200994 0.197015 0.193298 0.194652 0.193131
+----- static | 16 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127380 s | desvio 0.000164 s | min 0.127200 s | valores: 0.1276 0.1275 0.1273 0.1273 0.1272
+Tempo de leitura    n=5 | media 0.005367 s | desvio 0.000658 s | min 0.004425 s | valores: 0.005696 0.004425 0.005895 0.004934 0.005885
+Tempo de avaliacao  n=5 | media 0.000286 s | desvio 0.000068 s | min 0.000209 s | valores: 0.000209 0.000215 0.000323 0.000331 0.000350
+Tempo de execucao   n=5 | media 0.133136 s | desvio 0.000639 s | min 0.132247 s | valores: 0.133631 0.132247 0.133566 0.132664 0.133571
+-- x50
+Tempo de treino     n=5 | media 0.127660 s | desvio 0.001228 s | min 0.126800 s | valores: 0.1298 0.1274 0.1269 0.1268 0.1274
+Tempo de leitura    n=5 | media 0.072783 s | desvio 0.007140 s | min 0.064502 s | valores: 0.073877 0.083995 0.071178 0.064502 0.070363
+Tempo de avaliacao  n=5 | media 0.002433 s | desvio 0.000039 s | min 0.002378 s | valores: 0.002480 0.002433 0.002416 0.002459 0.002378
+Tempo de execucao   n=5 | media 0.203592 s | desvio 0.007541 s | min 0.194510 s | valores: 0.206857 0.214586 0.201176 0.194510 0.200833
+----- dynamic | 1 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127880 s | desvio 0.000239 s | min 0.127500 s | valores: 0.1275 0.1281 0.1280 0.1280 0.1278
+Tempo de leitura    n=5 | media 0.021217 s | desvio 0.000296 s | min 0.020825 s | valores: 0.021485 0.020989 0.021464 0.021324 0.020825
+Tempo de avaliacao  n=5 | media 0.000323 s | desvio 0.000013 s | min 0.000301 s | valores: 0.000323 0.000301 0.000326 0.000334 0.000329
+Tempo de execucao   n=5 | media 0.149500 s | desvio 0.000343 s | min 0.148989 s | valores: 0.149389 0.149504 0.149863 0.149754 0.148989
+-- x50
+Tempo de treino     n=5 | media 0.127140 s | desvio 0.000241 s | min 0.126900 s | valores: 0.1270 0.1270 0.1274 0.1269 0.1274
+Tempo de leitura    n=5 | media 0.345057 s | desvio 0.000959 s | min 0.344048 s | valores: 0.345778 0.345060 0.344048 0.344175 0.346224
+Tempo de avaliacao  n=5 | media 0.015117 s | desvio 0.000254 s | min 0.014896 s | valores: 0.015451 0.014898 0.015317 0.014896 0.015023
+Tempo de execucao   n=5 | media 0.487981 s | desvio 0.001127 s | min 0.486583 s | valores: 0.488922 0.487639 0.487431 0.486583 0.489331
+----- dynamic | 2 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127900 s | desvio 0.000524 s | min 0.127500 s | valores: 0.1279 0.1277 0.1276 0.1288 0.1275
+Tempo de leitura    n=5 | media 0.011738 s | desvio 0.000225 s | min 0.011495 s | valores: 0.011998 0.011495 0.011526 0.011755 0.011915
+Tempo de avaliacao  n=5 | media 0.000264 s | desvio 0.000018 s | min 0.000232 s | valores: 0.000273 0.000265 0.000278 0.000271 0.000232
+Tempo de execucao   n=5 | media 0.139986 s | desvio 0.000586 s | min 0.139483 s | valores: 0.140262 0.139553 0.139483 0.140881 0.139752
+-- x50
+Tempo de treino     n=5 | media 0.127440 s | desvio 0.000934 s | min 0.126900 s | valores: 0.1291 0.1270 0.1269 0.1272 0.1270
+Tempo de leitura    n=5 | media 0.189769 s | desvio 0.001515 s | min 0.188706 s | valores: 0.189293 0.192447 0.189203 0.188706 0.189197
+Tempo de avaliacao  n=5 | media 0.009543 s | desvio 0.000182 s | min 0.009248 s | valores: 0.009619 0.009616 0.009248 0.009508 0.009725
+Tempo de execucao   n=5 | media 0.327450 s | desvio 0.001713 s | min 0.326034 s | valores: 0.328723 0.329800 0.326034 0.326071 0.326622
+----- dynamic | 4 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127480 s | desvio 0.001618 s | min 0.126300 s | valores: 0.1280 0.1263 0.1301 0.1266 0.1264
+Tempo de leitura    n=5 | media 0.006403 s | desvio 0.000138 s | min 0.006292 s | valores: 0.006637 0.006371 0.006401 0.006316 0.006292
+Tempo de avaliacao  n=5 | media 0.000200 s | desvio 0.000009 s | min 0.000184 s | valores: 0.000199 0.000207 0.000203 0.000184 0.000206
+Tempo de execucao   n=5 | media 0.134152 s | desvio 0.001658 s | min 0.132971 s | valores: 0.134920 0.133001 0.136731 0.133135 0.132971
+-- x50
+Tempo de treino     n=5 | media 0.127940 s | desvio 0.002107 s | min 0.126800 s | valores: 0.1272 0.1270 0.1317 0.1268 0.1270
+Tempo de leitura    n=5 | media 0.101612 s | desvio 0.000732 s | min 0.101150 s | valores: 0.101272 0.102912 0.101326 0.101150 0.101402
+Tempo de avaliacao  n=5 | media 0.005975 s | desvio 0.000076 s | min 0.005895 s | valores: 0.005940 0.006023 0.006082 0.005935 0.005895
+Tempo de execucao   n=5 | media 0.236224 s | desvio 0.002142 s | min 0.234586 s | valores: 0.235110 0.236629 0.239797 0.234586 0.234998
+----- dynamic | 8 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.128660 s | desvio 0.000503 s | min 0.128100 s | valores: 0.1282 0.1281 0.1293 0.1289 0.1288
+Tempo de leitura    n=5 | media 0.004378 s | desvio 0.000053 s | min 0.004295 s | valores: 0.004410 0.004352 0.004295 0.004417 0.004414
+Tempo de avaliacao  n=5 | media 0.000189 s | desvio 0.000008 s | min 0.000179 s | valores: 0.000188 0.000201 0.000179 0.000189 0.000186
+Tempo de execucao   n=5 | media 0.133326 s | desvio 0.000468 s | min 0.132722 s | valores: 0.132946 0.132722 0.133814 0.133621 0.133526
+-- x50
+Tempo de treino     n=5 | media 0.127640 s | desvio 0.001069 s | min 0.126800 s | valores: 0.1279 0.1271 0.1294 0.1270 0.1268
+Tempo de leitura    n=5 | media 0.064410 s | desvio 0.000403 s | min 0.064046 s | valores: 0.065062 0.064305 0.064138 0.064046 0.064497
+Tempo de avaliacao  n=5 | media 0.004754 s | desvio 0.000062 s | min 0.004666 s | valores: 0.004828 0.004780 0.004666 0.004721 0.004774
+Tempo de execucao   n=5 | media 0.197492 s | desvio 0.001133 s | min 0.196433 s | valores: 0.198477 0.196881 0.198937 0.196433 0.196732
+----- dynamic | 16 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.128540 s | desvio 0.001159 s | min 0.127000 s | valores: 0.1270 0.1299 0.1285 0.1294 0.1279
+Tempo de leitura    n=5 | media 0.004736 s | desvio 0.000407 s | min 0.004427 s | valores: 0.004871 0.005393 0.004501 0.004427 0.004487
+Tempo de avaliacao  n=5 | media 0.000212 s | desvio 0.000009 s | min 0.000204 s | valores: 0.000217 0.000226 0.000209 0.000206 0.000204
+Tempo de execucao   n=5 | media 0.133593 s | desvio 0.001360 s | min 0.132136 s | valores: 0.132136 0.135624 0.133342 0.134152 0.132713
+-- x50
+Tempo de treino     n=5 | media 0.128140 s | desvio 0.001048 s | min 0.127200 s | valores: 0.1282 0.1272 0.1276 0.1299 0.1278
+Tempo de leitura    n=5 | media 0.064995 s | desvio 0.000585 s | min 0.064457 s | valores: 0.064457 0.065981 0.064681 0.064902 0.064955
+Tempo de avaliacao  n=5 | media 0.004732 s | desvio 0.000121 s | min 0.004630 s | valores: 0.004736 0.004939 0.004682 0.004675 0.004630
+Tempo de execucao   n=5 | media 0.198582 s | desvio 0.000997 s | min 0.197667 s | valores: 0.198091 0.198851 0.197667 0.200195 0.198107
+----- guided | 1 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.128100 s | desvio 0.000308 s | min 0.127800 s | valores: 0.1281 0.1279 0.1281 0.1286 0.1278
+Tempo de leitura    n=5 | media 0.021194 s | desvio 0.000359 s | min 0.020791 s | valores: 0.021414 0.020791 0.021492 0.021462 0.020813
+Tempo de avaliacao  n=5 | media 0.000315 s | desvio 0.000018 s | min 0.000282 s | valores: 0.000320 0.000327 0.000320 0.000324 0.000282
+Tempo de execucao   n=5 | media 0.149684 s | desvio 0.000635 s | min 0.148989 s | valores: 0.149937 0.149064 0.149970 0.150459 0.148989
+-- x50
+Tempo de treino     n=5 | media 0.127120 s | desvio 0.000045 s | min 0.127100 s | valores: 0.1271 0.1271 0.1272 0.1271 0.1271
+Tempo de leitura    n=5 | media 0.345700 s | desvio 0.000697 s | min 0.344772 s | valores: 0.346545 0.345818 0.346103 0.345261 0.344772
+Tempo de avaliacao  n=5 | media 0.015068 s | desvio 0.000251 s | min 0.014865 s | valores: 0.014902 0.015428 0.014909 0.015238 0.014865
+Tempo de execucao   n=5 | media 0.488555 s | desvio 0.000745 s | min 0.487392 s | valores: 0.489186 0.489045 0.488917 0.488237 0.487392
+----- guided | 2 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127980 s | desvio 0.000427 s | min 0.127500 s | valores: 0.1280 0.1284 0.1276 0.1284 0.1275
+Tempo de leitura    n=5 | media 0.011488 s | desvio 0.000101 s | min 0.011406 s | valores: 0.011547 0.011637 0.011425 0.011423 0.011406
+Tempo de avaliacao  n=5 | media 0.000240 s | desvio 0.000008 s | min 0.000232 s | valores: 0.000232 0.000242 0.000234 0.000239 0.000251
+Tempo de execucao   n=5 | media 0.139787 s | desvio 0.000488 s | min 0.139247 s | valores: 0.139807 0.140395 0.139366 0.140122 0.139247
+-- x50
+Tempo de treino     n=5 | media 0.127060 s | desvio 0.000207 s | min 0.126900 s | valores: 0.1271 0.1269 0.1269 0.1270 0.1274
+Tempo de leitura    n=5 | media 0.187060 s | desvio 0.000520 s | min 0.186455 s | valores: 0.187057 0.186663 0.187395 0.187729 0.186455
+Tempo de avaliacao  n=5 | media 0.007461 s | desvio 0.000158 s | min 0.007344 s | valores: 0.007462 0.007369 0.007733 0.007399 0.007344
+Tempo de execucao   n=5 | media 0.322282 s | desvio 0.000531 s | min 0.321601 s | valores: 0.322332 0.321601 0.322756 0.322823 0.321900
+----- guided | 4 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.126920 s | desvio 0.001188 s | min 0.126200 s | valores: 0.1268 0.1290 0.1264 0.1262 0.1262
+Tempo de leitura    n=5 | media 0.006247 s | desvio 0.000042 s | min 0.006203 s | valores: 0.006203 0.006296 0.006229 0.006289 0.006219
+Tempo de avaliacao  n=5 | media 0.000179 s | desvio 0.000016 s | min 0.000158 s | valores: 0.000178 0.000201 0.000174 0.000186 0.000158
+Tempo de execucao   n=5 | media 0.133405 s | desvio 0.001233 s | min 0.132667 s | valores: 0.133236 0.135574 0.132844 0.132703 0.132667
+-- x50
+Tempo de treino     n=5 | media 0.127520 s | desvio 0.000455 s | min 0.127000 s | valores: 0.1276 0.1271 0.1279 0.1270 0.1280
+Tempo de leitura    n=5 | media 0.100213 s | desvio 0.000341 s | min 0.099842 s | valores: 0.099842 0.100001 0.100515 0.100079 0.100629
+Tempo de avaliacao  n=5 | media 0.003955 s | desvio 0.000154 s | min 0.003810 s | valores: 0.004104 0.003912 0.003810 0.004132 0.003817
+Tempo de execucao   n=5 | media 0.232355 s | desvio 0.000589 s | min 0.231738 s | valores: 0.232168 0.231738 0.232866 0.231925 0.233079
+----- guided | 8 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.129080 s | desvio 0.001635 s | min 0.127900 s | valores: 0.1287 0.1289 0.1319 0.1279 0.1280
+Tempo de leitura    n=5 | media 0.004236 s | desvio 0.000078 s | min 0.004154 s | valores: 0.004222 0.004154 0.004340 0.004176 0.004290
+Tempo de avaliacao  n=5 | media 0.000158 s | desvio 0.000010 s | min 0.000147 s | valores: 0.000153 0.000175 0.000158 0.000147 0.000157
+Tempo de execucao   n=5 | media 0.133557 s | desvio 0.001675 s | min 0.132308 s | valores: 0.133183 0.133299 0.136458 0.132308 0.132538
+-- x50
+Tempo de treino     n=5 | media 0.127740 s | desvio 0.001299 s | min 0.126800 s | valores: 0.1300 0.1273 0.1276 0.1268 0.1270
+Tempo de leitura    n=5 | media 0.063013 s | desvio 0.000275 s | min 0.062606 s | valores: 0.062606 0.063034 0.062912 0.063188 0.063323
+Tempo de avaliacao  n=5 | media 0.002277 s | desvio 0.000030 s | min 0.002244 s | valores: 0.002324 0.002263 0.002266 0.002244 0.002286
+Tempo de execucao   n=5 | media 0.193740 s | desvio 0.001091 s | min 0.192960 s | valores: 0.195664 0.193306 0.193470 0.192960 0.193302
+----- guided | 16 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127820 s | desvio 0.000610 s | min 0.126800 s | valores: 0.1268 0.1281 0.1284 0.1278 0.1280
+Tempo de leitura    n=5 | media 0.005770 s | desvio 0.000781 s | min 0.005151 s | valores: 0.005336 0.006041 0.005151 0.005298 0.007025
+Tempo de avaliacao  n=5 | media 0.000167 s | desvio 0.000004 s | min 0.000164 s | valores: 0.000164 0.000168 0.000173 0.000165 0.000164
+Tempo de execucao   n=5 | media 0.133866 s | desvio 0.001067 s | min 0.132430 s | valores: 0.132430 0.134428 0.133826 0.133386 0.135261
+-- x50
+Tempo de treino     n=5 | media 0.129060 s | desvio 0.001258 s | min 0.126900 s | valores: 0.1291 0.1296 0.1269 0.1301 0.1296
+Tempo de leitura    n=5 | media 0.067385 s | desvio 0.001951 s | min 0.064818 s | valores: 0.066798 0.069244 0.064818 0.069447 0.066616
+Tempo de avaliacao  n=5 | media 0.002340 s | desvio 0.000047 s | min 0.002295 s | valores: 0.002414 0.002295 0.002309 0.002353 0.002331
+Tempo de execucao   n=5 | media 0.199479 s | desvio 0.003075 s | min 0.194762 s | valores: 0.198978 0.201836 0.194762 0.202594 0.199223
+===== v0.3: tamanho do chunk no dynamic (x50)
+----- dynamic,64 | 8 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127060 s | desvio 0.000261 s | min 0.126900 s | valores: 0.1269 0.1269 0.1275 0.1271 0.1269
+Tempo de leitura    n=5 | media 0.063201 s | desvio 0.000443 s | min 0.062555 s | valores: 0.062555 0.062997 0.063657 0.063252 0.063542
+Tempo de avaliacao  n=5 | media 0.002283 s | desvio 0.000014 s | min 0.002265 s | valores: 0.002265 0.002282 0.002298 0.002296 0.002273
+Tempo de execucao   n=5 | media 0.193243 s | desvio 0.000645 s | min 0.192389 s | valores: 0.192389 0.192912 0.194126 0.193394 0.193393
+----- dynamic,64 | 16 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127580 s | desvio 0.001203 s | min 0.126800 s | valores: 0.1269 0.1272 0.1297 0.1273 0.1268
+Tempo de leitura    n=5 | media 0.063847 s | desvio 0.001356 s | min 0.062863 s | valores: 0.063213 0.066222 0.063631 0.063304 0.062863
+Tempo de avaliacao  n=5 | media 0.002300 s | desvio 0.000033 s | min 0.002261 s | valores: 0.002261 0.002269 0.002325 0.002334 0.002309
+Tempo de execucao   n=5 | media 0.194422 s | desvio 0.001790 s | min 0.192706 s | valores: 0.193051 0.196361 0.196333 0.193657 0.192706
+----- dynamic,1024 | 8 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127380 s | desvio 0.000522 s | min 0.127000 s | valores: 0.1270 0.1270 0.1282 0.1276 0.1271
+Tempo de leitura    n=5 | media 0.065453 s | desvio 0.002183 s | min 0.064042 s | valores: 0.069321 0.064042 0.064379 0.064753 0.064769
+Tempo de avaliacao  n=5 | media 0.002381 s | desvio 0.000041 s | min 0.002331 s | valores: 0.002439 0.002331 0.002402 0.002373 0.002359
+Tempo de execucao   n=5 | media 0.195890 s | desvio 0.002102 s | min 0.194010 s | valores: 0.199479 0.194010 0.195639 0.195429 0.194895
+----- dynamic,1024 | 16 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.127180 s | desvio 0.000471 s | min 0.126800 s | valores: 0.1280 0.1271 0.1270 0.1268 0.1270
+Tempo de leitura    n=5 | media 0.066754 s | desvio 0.000911 s | min 0.065387 s | valores: 0.066843 0.065387 0.066985 0.067926 0.066628
+Tempo de avaliacao  n=5 | media 0.002423 s | desvio 0.000017 s | min 0.002398 s | valores: 0.002445 0.002430 0.002398 0.002419 0.002424
+Tempo de execucao   n=5 | media 0.197071 s | desvio 0.001018 s | min 0.195547 s | valores: 0.198080 0.195547 0.197077 0.197908 0.196743
+===== experimento: OpenMP dentro da amostra (static)
+----- 1 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=3 | media 0.224100 s | desvio 0.000265 s | min 0.223900 s | valores: 0.2239 0.2244 0.2240
+Tempo de leitura    n=3 | media 0.021938 s | desvio 0.000263 s | min 0.021680 s | valores: 0.022206 0.021929 0.021680
+Tempo de avaliacao  n=3 | media 0.000316 s | desvio 0.000004 s | min 0.000313 s | valores: 0.000313 0.000321 0.000314
+Tempo de execucao   n=3 | media 0.246420 s | desvio 0.000301 s | min 0.246086 s | valores: 0.246501 0.246672 0.246086
+----- 2 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=3 | media 1.848433 s | desvio 0.014332 s | min 1.832400 s | valores: 1.8600 1.8324 1.8529
+Tempo de leitura    n=3 | media 0.012060 s | desvio 0.000143 s | min 0.011919 s | valores: 0.012205 0.011919 0.012055
+Tempo de avaliacao  n=3 | media 0.000183 s | desvio 0.000015 s | min 0.000172 s | valores: 0.000200 0.000178 0.000172
+Tempo de execucao   n=3 | media 1.860756 s | desvio 0.014497 s | min 1.844560 s | valores: 1.872519 1.844560 1.865189
+----- 4 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=3 | media 2.201767 s | desvio 0.026753 s | min 2.183000 s | valores: 2.2324 2.1830 2.1899
+Tempo de leitura    n=3 | media 0.007145 s | desvio 0.000891 s | min 0.006599 s | valores: 0.008173 0.006599 0.006663
+Tempo de avaliacao  n=3 | media 0.000086 s | desvio 0.000001 s | min 0.000086 s | valores: 0.000086 0.000087 0.000086
+Tempo de execucao   n=3 | media 2.209073 s | desvio 0.027671 s | min 2.189766 s | valores: 2.240775 2.189766 2.196679
+----- 8 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=3 | media 6.516567 s | desvio 3.400860 s | min 3.395200 s | valores: 3.3952 6.0136 10.1409
+Tempo de leitura    n=3 | media 0.005153 s | desvio 0.000887 s | min 0.004543 s | valores: 0.004746 0.004543 0.006171
+Tempo de avaliacao  n=3 | media 0.000067 s | desvio 0.000012 s | min 0.000054 s | valores: 0.000054 0.000076 0.000071
+Tempo de execucao   n=3 | media 6.521893 s | desvio 3.401660 s | min 3.400077 s | valores: 3.400077 6.018343 10.147259
+----- 16 thread(s)
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=3 | media 32.961100 s | desvio 2.463987 s | min 30.686100 s | valores: 30.6861 32.6189 35.5783
+Tempo de leitura    n=3 | media 0.008294 s | desvio 0.000434 s | min 0.007883 s | valores: 0.008748 0.007883 0.008252
+Tempo de avaliacao  n=3 | media 0.000147 s | desvio 0.000011 s | min 0.000139 s | valores: 0.000139 0.000143 0.000159
+Tempo de execucao   n=3 | media 32.969746 s | desvio 2.463802 s | min 30.695166 s | valores: 30.695166 32.627160 35.586912
+fim Fri Nov 27 02:11:44 PM EST 2026
+
+# CPUs que um job com --cpus-per-task=16 recebe no compute10
+nó compute10
+Cpus_allowed_list:	0,2,4,6,8,10,12,14
+8
+CPU CORE    MAXMHZ
+  0    0 4800.0000
+  2    1 4800.0000
+ 14    7 4800.0000
+ 16    8 3600.0000
+ 23   15 3600.0000
+
+# Programa inteiro com time (8 threads, guided)
+nó compute10
+-- v03 8 threads guided
+wall 0.150 s
+wall 0.136 s
+wall 0.134 s
+wall 0.134 s
+wall 0.134 s
+-- v03 8 threads guided x50
+wall 0.197 s
+wall 0.194 s
+wall 0.196 s
+
+# Versão final sem OMP_SCHEDULE nem OMP_NUM_THREADS (padrão: guided, 8 threads)
+nó compute10
+-- v0.3 final, sem OMP_SCHEDULE nem OMP_NUM_THREADS
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.130320 s | desvio 0.001699 s | min 0.129200 s | valores: 0.1301 0.1333 0.1294 0.1292 0.1296
+Tempo de leitura    n=5 | media 0.004140 s | desvio 0.000065 s | min 0.004081 s | valores: 0.004209 0.004081 0.004106 0.004092 0.004211
+Tempo de avaliacao  n=5 | media 0.000159 s | desvio 0.000007 s | min 0.000148 s | valores: 0.000148 0.000165 0.000159 0.000157 0.000167
+Tempo de execucao   n=5 | media 0.134723 s | desvio 0.001697 s | min 0.133528 s | valores: 0.134558 0.137679 0.133758 0.133528 0.134092
+-- x50
+Tempo de treino     n=5 | media 0.130120 s | desvio 0.000164 s | min 0.130000 s | valores: 0.1300 0.1304 0.1300 0.1301 0.1301
+Tempo de leitura    n=5 | media 0.063052 s | desvio 0.000993 s | min 0.062402 s | valores: 0.064794 0.062773 0.062444 0.062848 0.062402
+Tempo de avaliacao  n=5 | media 0.002272 s | desvio 0.000029 s | min 0.002228 s | valores: 0.002304 0.002260 0.002279 0.002228 0.002287
+Tempo de execucao   n=5 | media 0.196137 s | desvio 0.000983 s | min 0.195381 s | valores: 0.197808 0.196158 0.195381 0.195853 0.195487
+
+# Padrão da libgomp sem OMP_SCHEDULE (omp_get_schedule): dynamic, chunk 1 | threads padrão no job: 8

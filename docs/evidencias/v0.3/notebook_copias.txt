@@ -1,0 +1,4 @@
+# notebook i7-10510U, g++ 16.2.1, -O3 -mavx2 -ffp-contract=off -fopenmp, OMP_NUM_THREADS=1, rodadas intercaladas (5)
+# passo4 = avaliação paralela usando l1, l2, l3 direto; passo5 = com cópias das camadas
+passo4 (sem cópias) treino media 0.4111 s desvio 0.0063 s | callgrind 3,235,569,999 instruções
+passo5 (com cópias) treino media 0.2379 s desvio 0.0050 s | callgrind 1,670,650,578 instruções
