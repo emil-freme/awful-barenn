@@ -1,0 +1,44 @@
+# Notebook i7-10510U, g++ 16: treino por commit, versões rodadas intercaladas (5 rodadas)
+# p_0 = v0.1, p_A..p_D = commits 1..4 (SSE), p_E = commit 5 (-mavx2)
+p_0   n=5 media 0.9688 s desvio 0.0460 s min 0.8945 s
+p_A   n=5 media 0.6442 s desvio 0.0234 s min 0.6213 s
+p_B   n=5 media 0.3901 s desvio 0.0132 s min 0.3746 s
+p_C   n=5 media 0.2401 s desvio 0.0331 s min 0.2036 s
+p_D   n=5 media 0.2444 s desvio 0.0443 s min 0.2067 s
+p_E   n=5 media 0.2692 s desvio 0.0271 s min 0.2377 s
+
+# Teste de FMA no notebook (g++ 16)
+Notebook i7-10510U, g++ 16.2.1. Saida comparada com referencia/saida_legado.txt (sem linhas Tempo).
+FMA = numero de instrucoes vfmadd no binario (objdump).
+legado  (sem flags)                            FMA=0    IGUAL   Tempo de treino 27.7911 s
+legado  -O3                                    FMA=0    IGUAL   Tempo de treino 0.9231 s
+legado  -O3 -ffp-contract=off                  FMA=0    IGUAL   Tempo de treino 0.8934 s
+legado  -O3 -march=native                      FMA=167  IGUAL   Tempo de treino 0.8047 s
+legado  -O3 -march=native -ffp-contract=off    FMA=0    IGUAL   Tempo de treino 0.8649 s
+v0.2    -O3 -ffp-contract=off                  FMA=0    IGUAL   Tempo de treino 0.2234 s
+v0.2    -O3 -march=native                      FMA=203  DIFERE  Tempo de treino 0.2523 s
+v0.2    -O3 -march=native -ffp-contract=off    FMA=0    IGUAL   Tempo de treino 0.2339 s
+
+Diferenca da v0.2 com -O3 -march=native (FMA ligado):
+8c8
+< Epoca 31/51 | perda media 0.0184
+---
+> Epoca 31/51 | perda media 0.0186
+12c12
+< Epoca 51/51 | perda media 0.0135
+---
+> Epoca 51/51 | perda media 0.0134
+15,16c15,16
+< Acuracia 95.5% | 1717 acertos em 1797 imagens
+< Perda media 0.0432
+---
+> Acuracia 95.7% | 1719 acertos em 1797 imagens
+> Perda media 0.0436
+29,31c29,31
+<        7         9            9
+<        8         1            6
+<        3         2            5
+---
+>        7         9            8
+>        3         2            7
+>        8         1            7

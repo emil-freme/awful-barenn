@@ -1,0 +1,187 @@
+# Notebook i7-10510U, g++ 16.2.1, valgrind --tool=callgrind --cache-sim=yes ./barenn (make, -O3 -ffp-contract=off)
+
+## um commit por vez (v0.1 = legado com o Makefile)
+== v0.1
+I   refs:      9,224,407,696
+D   refs:      2,886,537,309  (2,564,417,903 rd + 322,119,406 wr)
+D1  misses:          966,124  (      933,113 rd +      33,011 wr)
+== passo 1
+I   refs:      5,885,202,800
+D   refs:      1,587,425,419  (1,276,421,714 rd + 311,003,705 wr)
+D1  misses:        1,024,441  (      973,315 rd +      51,126 wr)
+== passo 2
+I   refs:      4,848,744,545
+D   refs:      1,462,773,796  (1,036,991,179 rd + 425,782,617 wr)
+D1  misses:        1,013,063  (      942,286 rd +      70,777 wr)
+== passo 3
+I   refs:      2,942,119,112
+D   refs:      1,197,462,524  (829,173,960 rd + 368,288,564 wr)
+D1  misses:        1,192,230  (  1,074,761 rd +     117,469 wr)
+== passo 4
+I   refs:      2,933,218,875
+D   refs:      1,193,818,530  (826,837,630 rd + 366,980,900 wr)
+D1  misses:          908,140  (    856,420 rd +      51,720 wr)
+
+## instruções por trecho da v0.2 (make OPT="-O3 -g"; callgrind_annotate --auto=yes barenn.cpp)
+trecho                                         Ir      %
+Forward (l. 56-75)                    930,237,873  31.7%
+Backward delta (l. 76-86)              85,682,567   2.9%
+Backward grad_in (l. 87-97)           451,557,468  15.4%
+Backward atualizacao (l. 98-112)    1,032,577,079  35.2%
+resto do barenn.cpp                    25,983,244   0.9%
+fora do barenn.cpp (libs, STL)        407,180,639  13.9%
+total                               2,933,218,870
+
+## passo 2 -> passo 3: linhas com mais de 0,04 G instruções (só Ir)
+-- passo 2
+l.  59  0.119 G | for (int j = 0; j < in_features; ++j) {
+l.  60  0.222 G | const float x = input[j];
+l.  62  0.497 G | for (int i = 0; i < out_features; ++i) {
+l.  63  0.696 G | z[i] += x * w[i];
+l.  81  0.043 G | : grad_out[i] * (last_z[i] > 0.0f ? 1.0f : 0.0f);
+l.  88  0.040 G | for (int i = 0; i < in_features; ++i) {
+l.  91  0.112 G | for (int j = 0; j < out_features; ++j) {
+l.  92  0.434 G | sum += delta[j] * w[j];
+l. 100  0.090 G | for (int j = 0; j < in_features; ++j) {
+l. 101  0.116 G | const float x = last_input[j];
+l. 103  0.455 G | for (int i = 0; i < out_features; ++i) {
+l. 104  0.839 G | w[i] -= learning_rate * (delta[i] * x);
+soma das linhas do barenn.cpp (passo 2): 3.859 G
+-- passo 3
+l.  63  0.092 G | for (int j = 0; j < in_features; ++j) {
+l.  64  0.054 G | const float x = input[j];
+l.  66  0.067 G | for (int i = 0; i < out_features; ++i) {
+l.  67  0.702 G | z[i] += x * w[i];
+l.  84  0.047 G | : grad_out[i] * (last_z[i] > 0.0f ? 1.0f : 0.0f);
+l.  93  0.402 G | sum += delta[j] * w[j];
+l. 101  0.089 G | for (int j = 0; j < in_features; ++j) {
+l. 102  0.050 G | const float x = last_input[j];
+l. 104  0.044 G | for (int i = 0; i < out_features; ++i) {
+l. 105  0.834 G | w[i] -= learning_rate * (delta[i] * x);
+soma das linhas do barenn.cpp (passo 3): 2.525 G
+
+## laços do treino (linhas do Forward/Backward): vetorizados e desenrolados
+## g++ -O3 -ffp-contract=off -fopt-info-vec-optimized -fopt-info-loop-optimized (contagem de mensagens por linha)
+-- passo 2
+  6x barenn.cpp:55:27: optimized:  loop versioned for vectorization because of possible aliasing
+  6x barenn.cpp:55:27: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  6x barenn.cpp:55:27: optimized: loop with 2 iterations completely unrolled
+  6x barenn.cpp:59:27: optimized: Guard hoisted
+  6x barenn.cpp:62:31: optimized:  loop versioned for vectorization because of possible aliasing
+  6x barenn.cpp:62:31: optimized: epilogue loop vectorized using 8 byte vectors and unroll factor 2
+  6x barenn.cpp:62:31: optimized: loop turned into non-loop; it never loops
+  6x barenn.cpp:62:31: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  6x barenn.cpp:63:20: optimized: loop turned into non-loop; it never loops
+  1x barenn.cpp:67:27: optimized: Loop 14 distributed: split to 0 loops and 1 library calls.
+  1x barenn.cpp:67:27: optimized: Loop 19 distributed: split to 0 loops and 1 library calls.
+  1x barenn.cpp:67:27: optimized: Loop 24 distributed: split to 0 loops and 1 library calls.
+  1x barenn.cpp:67:27: optimized: Loop 29 distributed: split to 0 loops and 1 library calls.
+  1x barenn.cpp:67:27: optimized: Loop 34 distributed: split to 0 loops and 1 library calls.
+  1x barenn.cpp:67:27: optimized: Loop 9 distributed: split to 0 loops and 1 library calls.
+  6x barenn.cpp:67:27: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  6x barenn.cpp:67:27: optimized: loop with 2 iterations completely unrolled
+  1x barenn.cpp:67:27: optimized: unswitching loop 14 on ‘if’ with condition: _561 != 0
+  1x barenn.cpp:67:27: optimized: unswitching loop 19 on ‘if’ with condition: _711 != 0
+  1x barenn.cpp:67:27: optimized: unswitching loop 24 on ‘if’ with condition: _831 != 0
+  1x barenn.cpp:67:27: optimized: unswitching loop 29 on ‘if’ with condition: _981 != 0
+  1x barenn.cpp:67:27: optimized: unswitching loop 34 on ‘if’ with condition: _1131 != 0
+  1x barenn.cpp:67:27: optimized: unswitching loop 9 on ‘if’ with condition: _411 != 0
+  1x barenn.cpp:79:27: optimized: Loop 44 distributed: split to 0 loops and 1 library calls.
+  1x barenn.cpp:79:27: optimized: Loop 51 distributed: split to 0 loops and 1 library calls.
+  1x barenn.cpp:79:27: optimized: Loop 58 distributed: split to 0 loops and 1 library calls.
+  1x barenn.cpp:79:27: optimized: unswitching loop 44 on ‘if’ with condition: _1267 != 0
+  1x barenn.cpp:79:27: optimized: unswitching loop 51 on ‘if’ with condition: _1424 != 0
+  1x barenn.cpp:79:27: optimized: unswitching loop 58 on ‘if’ with condition: _1581 != 0
+  2x barenn.cpp:91:35: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  2x barenn.cpp:91:35: optimized: loop with 2 iterations completely unrolled
+  3x barenn.cpp:100:27: optimized: Guard hoisted
+  3x barenn.cpp:103:31: optimized: epilogue loop vectorized using 8 byte vectors and unroll factor 2
+  3x barenn.cpp:103:31: optimized: loop turned into non-loop; it never loops
+  3x barenn.cpp:103:31: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  3x barenn.cpp:104:51: optimized: loop turned into non-loop; it never loops
+  3x barenn.cpp:107:27: optimized: epilogue loop vectorized using 8 byte vectors and unroll factor 2
+  3x barenn.cpp:107:27: optimized: loop turned into non-loop; it never loops
+  3x barenn.cpp:107:27: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  3x barenn.cpp:108:38: optimized: loop turned into non-loop; it never loops
+-- passo 3
+  6x barenn.cpp:59:27: optimized:  loop versioned for vectorization because of possible aliasing
+  1x barenn.cpp:59:27: optimized: epilogue loop vectorized using 8 byte vectors and unroll factor 2
+  6x barenn.cpp:59:27: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  1x barenn.cpp:59:27: optimized: loop with 15 iterations completely unrolled
+  3x barenn.cpp:59:27: optimized: loop with 2 iterations completely unrolled
+  1x barenn.cpp:59:27: optimized: loop with 9 iterations completely unrolled
+  1x barenn.cpp:60:18: optimized: loop turned into non-loop; it never loops
+  1x barenn.cpp:60:18: optimized: loop with 1 iterations completely unrolled
+  1x barenn.cpp:60:18: optimized: loop with 3 iterations completely unrolled
+  1x barenn.cpp:60:18: optimized: loop with 7 iterations completely unrolled
+  3x barenn.cpp:63:27: optimized: Guard hoisted
+  6x barenn.cpp:66:31: optimized:  loop versioned for vectorization because of possible aliasing
+  4x barenn.cpp:66:31: optimized: epilogue loop vectorized using 8 byte vectors and unroll factor 2
+  3x barenn.cpp:66:31: optimized: loop turned into non-loop; it never loops
+  6x barenn.cpp:66:31: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  1x barenn.cpp:66:31: optimized: loop with 15 iterations completely unrolled
+  1x barenn.cpp:66:31: optimized: loop with 9 iterations completely unrolled
+  4x barenn.cpp:67:20: optimized: loop turned into non-loop; it never loops
+  1x barenn.cpp:67:20: optimized: loop with 1 iterations completely unrolled
+  1x barenn.cpp:67:20: optimized: loop with 3 iterations completely unrolled
+  1x barenn.cpp:67:20: optimized: loop with 7 iterations completely unrolled
+  9x barenn.cpp:71:27: optimized:  loop versioned for vectorization because of possible aliasing
+  1x barenn.cpp:71:27: optimized: epilogue loop vectorized using 8 byte vectors and unroll factor 2
+  9x barenn.cpp:71:27: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  1x barenn.cpp:71:27: optimized: loop with 15 iterations completely unrolled
+  6x barenn.cpp:71:27: optimized: loop with 2 iterations completely unrolled
+  1x barenn.cpp:71:27: optimized: loop with 9 iterations completely unrolled
+  1x barenn.cpp:71:27: optimized: unswitching loop 13 on ‘if’ with condition: _366 != 0
+  1x barenn.cpp:71:27: optimized: unswitching loop 17 on ‘if’ with condition: _417 != 0
+  1x barenn.cpp:71:27: optimized: unswitching loop 9 on ‘if’ with condition: _315 != 0
+  1x barenn.cpp:72:28: optimized: loop turned into non-loop; it never loops
+  1x barenn.cpp:72:28: optimized: loop with 1 iterations completely unrolled
+  1x barenn.cpp:82:27: optimized: Loop 53 distributed: split to 0 loops and 1 library calls.
+  1x barenn.cpp:82:27: optimized: loop with 15 iterations completely unrolled
+  1x barenn.cpp:92:35: optimized: epilogue loop vectorized using 8 byte vectors and unroll factor 2
+  2x barenn.cpp:92:35: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  1x barenn.cpp:93:37: optimized: loop turned into non-loop; it never loops
+  1x barenn.cpp:93:37: optimized: loop with 1 iterations completely unrolled
+  1x barenn.cpp:93:37: optimized: loop with 3 iterations completely unrolled
+  3x barenn.cpp:104:31: optimized:  loop versioned for vectorization because of possible aliasing
+  1x barenn.cpp:104:31: optimized: epilogue loop vectorized using 8 byte vectors and unroll factor 2
+  3x barenn.cpp:104:31: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  1x barenn.cpp:104:31: optimized: loop with 15 iterations completely unrolled
+  1x barenn.cpp:104:31: optimized: loop with 9 iterations completely unrolled
+  1x barenn.cpp:105:51: optimized: loop turned into non-loop; it never loops
+  1x barenn.cpp:105:51: optimized: loop with 1 iterations completely unrolled
+  1x barenn.cpp:105:51: optimized: loop with 3 iterations completely unrolled
+  1x barenn.cpp:105:51: optimized: loop with 7 iterations completely unrolled
+  3x barenn.cpp:108:27: optimized:  loop versioned for vectorization because of possible aliasing
+  1x barenn.cpp:108:27: optimized: epilogue loop vectorized using 8 byte vectors and unroll factor 2
+  3x barenn.cpp:108:27: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+  1x barenn.cpp:108:27: optimized: loop with 15 iterations completely unrolled
+  1x barenn.cpp:108:27: optimized: loop with 9 iterations completely unrolled
+  1x barenn.cpp:109:38: optimized: loop turned into non-loop; it never loops
+  1x barenn.cpp:109:38: optimized: loop with 1 iterations completely unrolled
+  1x barenn.cpp:109:38: optimized: loop with 3 iterations completely unrolled
+  1x barenn.cpp:109:38: optimized: loop with 7 iterations completely unrolled
+
+## v0.2: quem chama operator new (callgrind_annotate --tree=caller)
+*  include/bits/locale_facets.tcc:std::__use_cache<std::__numpunct_cache<char> >::operator()(std::locale const&) const [
+< new_allocator.h:Barenn::ler_dados(...) (49x)
+< new_allocator.h:Barenn::avaliar(...) (11x)
+< new_allocator.h:main (7x)
+< libsupc++/../../../../gcc/libstdc++-v3/libsupc++/new_opv.cc:operator new[](unsigned long) (2x) 
+< libsupc++/../../../../gcc/libstdc++-v3/libsupc++/new_opnt.cc:operator new(unsigned long, std::nothrow_t const&) (1x) 
+*  libsupc++/../../../../gcc/libstdc++-v3/libsupc++/new_op.cc:operator new(unsigned long) 
+
+## passo 5 (-mavx2): callgrind (make, -O3 -mavx2 -ffp-contract=off)
+I   refs:      1,867,567,900
+D   refs:        758,391,028  (527,446,210 rd + 230,944,818 wr)
+D1  misses:          908,093  (    856,313 rd +      51,780 wr)
+
+## instruções por trecho da v0.2 final (-mavx2; make OPT="-O3 -g")
+trecho                                         Ir      %
+Forward (l. 56-75)                    444,712,828  23.8%
+Backward delta (l. 76-86)              85,292,621   4.6%
+Backward grad_in (l. 87-97)           345,492,156  18.5%
+Backward atualizacao (l. 98-112)      550,018,905  29.5%
+resto do barenn.cpp                    24,500,462   1.3%
+fora do barenn.cpp (libs, STL)        417,553,471  22.4%
+total                               1,867,570,443
