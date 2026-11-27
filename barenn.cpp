@@ -29,13 +29,19 @@ class DenseLayer {
     vector<float> weights;
     vector<float> bias;
     // Dados do último forward usados para calcular os gradientes.
-    vector<float> last_input;
+    const float* last_input = nullptr;
     vector<float> last_z;
+    // buffers reaproveitados entre amostras
+    vector<float> out;
+    vector<float> delta;
+    vector<float> grad_in;
 
 public:
     DenseLayer(int input_size, int output_size, bool is_final = false)
         : in_features(input_size), out_features(output_size), final(is_final),
-          weights(static_cast<size_t>(input_size) * output_size), bias(output_size, 0) {
+          weights(static_cast<size_t>(input_size) * output_size), bias(output_size, 0),
+          last_z(output_size), out(output_size), delta(output_size),
+          grad_in(input_size) {
         // A semente fixa torna a inicialização de cada camada reproduzível.
         // mesma ordem de sorteio do legado
         mt19937 gen(1337);
@@ -47,10 +53,8 @@ public:
         }
     }
 
-    vector<float> Forward(vector<float> input) {
+    const float* Forward(const float* input) {
         last_input = input;
-        last_z.resize(out_features);
-        vector<float> out(out_features);
         float* z = last_z.data();
         for (int i = 0; i < out_features; ++i) {
             z[i] = bias[i];
@@ -67,24 +71,21 @@ public:
         for (int i = 0; i < out_features; ++i) {
             out[i] = final ? z[i] : max(0.0f, z[i]);
         }
-        return out;
+        return out.data();
     }
 
     // a primeira camada não precisa do gradiente da entrada
-    vector<float> Backward(vector<float> grad_out, float learning_rate,
-                           bool propagate = true) {
+    const float* Backward(const float* grad_out, float learning_rate,
+                          bool propagate = true) {
         // Delta é o gradiente da perda em relação à soma antes da ativação.
         // Na ReLU, o gradiente passa apenas quando essa soma é positiva.
-        vector<float> delta(out_features);
         for (int i = 0; i < out_features; ++i) {
             delta[i] = final ? grad_out[i]
                              : grad_out[i] * (last_z[i] > 0.0f ? 1.0f : 0.0f);
         }
 
         // O gradiente da entrada usa os pesos anteriores à atualização.
-        vector<float> grad_in;
         if (propagate) {
-            grad_in.resize(in_features);
             for (int i = 0; i < in_features; ++i) {
                 const float* w = &weights[i * out_features];
                 float sum = 0;
@@ -107,7 +108,7 @@ public:
         for (int i = 0; i < out_features; ++i) {
             bias[i] -= learning_rate * delta[i];
         }
-        return grad_in;
+        return propagate ? grad_in.data() : nullptr;
     }
 };
 
@@ -158,14 +159,13 @@ vector<Amostra> ler_dados(const string& caminho) {
 
 // Calcula metade da soma dos erros quadráticos. O alvo vale 1 para a
 // classe correta e 0 para as demais. O erro também é a derivada por escore.
-float perda(const vector<float>& escores, int rotulo,
-            vector<float>* gradiente = nullptr) {
+float perda(const float* escores, int rotulo, float* gradiente = nullptr) {
     float total = 0;
     for (int i = 0; i < classes; ++i) {
         float erro = escores[i] - (i == rotulo ? 1.0f : 0.0f);
         total += 0.5f * erro * erro;
         if (gradiente) {
-            (*gradiente)[i] = erro;
+            gradiente[i] = erro;
         }
     }
     return total;
@@ -193,10 +193,9 @@ void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3,
     // Só fazemos forward aqui. Os pesos ficam fixos.
     for (size_t i = 0; i < teste.size(); ++i) {
         const auto& amostra = teste[i];
-        auto escores = l3.Forward(l2.Forward(l1.Forward(amostra.imagem)));
+        const float* escores = l3.Forward(l2.Forward(l1.Forward(amostra.imagem.data())));
         // O índice do maior escore indica a classe prevista.
-        int previsto = static_cast<int>(
-            max_element(escores.begin(), escores.end()) - escores.begin());
+        int previsto = static_cast<int>(max_element(escores, escores + classes) - escores);
         bool acertou = previsto == amostra.rotulo;
         acertos += acertou;
         ++confusoes[amostra.rotulo][previsto];
@@ -287,7 +286,7 @@ int main(int argc, char** argv) {
         Barenn::DenseLayer l1(Barenn::entradas, 32);
         Barenn::DenseLayer l2(32, 16);
         Barenn::DenseLayer l3(16, Barenn::classes, true);
-        vector<float> gradiente(Barenn::classes);
+        array<float, Barenn::classes> gradiente{};
         array<double, epocas> perdas{};
 
         // A medição inclui forward, perda e backward de todas as épocas.
@@ -296,13 +295,13 @@ int main(int argc, char** argv) {
             double perda_total = 0;
             // Uma época percorre todo o conjunto na ordem do arquivo.
             for (const auto& amostra : treino) {
-                auto escores = l3.Forward(l2.Forward(l1.Forward(amostra.imagem)));
-                perda_total += Barenn::perda(escores, amostra.rotulo, &gradiente);
+                const float* escores = l3.Forward(l2.Forward(l1.Forward(amostra.imagem.data())));
+                perda_total += Barenn::perda(escores, amostra.rotulo, gradiente.data());
 
                 // Propaga o gradiente da última camada até a primeira.
                 // Cada Backward também atualiza os parâmetros da sua camada.
-                auto grad3 = l3.Backward(gradiente, taxa);
-                auto grad2 = l2.Backward(grad3, taxa);
+                const float* grad3 = l3.Backward(gradiente.data(), taxa);
+                const float* grad2 = l2.Backward(grad3, taxa);
                 l1.Backward(grad2, taxa, false);
             }
             perdas[epoca] = perda_total / treino.size();
