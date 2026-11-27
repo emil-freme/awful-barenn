@@ -112,26 +112,32 @@ public:
     }
 };
 
-struct Amostra {
-    vector<float> imagem;
-    int rotulo;
+// imagens em um vetor só: a imagem i começa em i * entradas
+struct Dados {
+    vector<float> imagens;
+    vector<int> rotulos;
+
+    size_t size() const { return rotulos.size(); }
+    const float* imagem(size_t i) const { return &imagens[i * entradas]; }
 };
 
-vector<Amostra> ler_dados(const string& caminho) {
+Dados ler_dados(const string& caminho) {
     ifstream arquivo(caminho);
     if (!arquivo) {
         throw runtime_error("Não foi possível abrir " + caminho);
     }
 
-    vector<Amostra> dados;
+    Dados dados;
     string linha;
     size_t numero_linha = 0;
     while (getline(arquivo, linha)) {
         ++numero_linha;
         istringstream campos(linha);
-        Amostra amostra{};
+        array<float, entradas> imagem;
+        int lidos = 0;
+        int rotulo = -1;
         // Cada atributo deve ser seguido por vírgula, inclusive o último.
-        for (int i = 0; i < entradas; ++i) {
+        for (; lidos < entradas; ++lidos) {
             float valor;
             char separador;
             if (!(campos >> valor >> separador) || separador != ',' ||
@@ -139,19 +145,20 @@ vector<Amostra> ler_dados(const string& caminho) {
                 break;
             }
             // Converte os valores de [0, 16] para [0, 1].
-            amostra.imagem.push_back(valor / 16.0f);
+            imagem[lidos] = valor / 16.0f;
         }
         // Depois dos atributos, deve restar apenas o rótulo de 0 a 9.
-        if (amostra.imagem.size() != entradas ||
-            !(campos >> amostra.rotulo) ||
-            amostra.rotulo < 0 || amostra.rotulo >= classes ||
+        if (lidos != entradas ||
+            !(campos >> rotulo) ||
+            rotulo < 0 || rotulo >= classes ||
             !(campos >> ws).eof()) {
             throw runtime_error(caminho + ":" + to_string(numero_linha) +
                 " — esperados 64 atributos de 0 a 16 e um rótulo inteiro de 0 a 9");
         }
-        dados.push_back(move(amostra));
+        dados.imagens.insert(dados.imagens.end(), imagem.begin(), imagem.end());
+        dados.rotulos.push_back(rotulo);
     }
-    if (arquivo.bad() || dados.empty()) {
+    if (arquivo.bad() || dados.size() == 0) {
         throw runtime_error("Falha de leitura ou arquivo vazio: " + caminho);
     }
     return dados;
@@ -172,7 +179,7 @@ float perda(const float* escores, int rotulo, float* gradiente = nullptr) {
 }
 
 void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3,
-             const vector<Amostra>& teste) {
+             const Dados& teste) {
     struct Exemplo {
         size_t linha;
         int real;
@@ -192,14 +199,14 @@ void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3,
 
     // Só fazemos forward aqui. Os pesos ficam fixos.
     for (size_t i = 0; i < teste.size(); ++i) {
-        const auto& amostra = teste[i];
-        const float* escores = l3.Forward(l2.Forward(l1.Forward(amostra.imagem.data())));
+        const int rotulo = teste.rotulos[i];
+        const float* escores = l3.Forward(l2.Forward(l1.Forward(teste.imagem(i))));
         // O índice do maior escore indica a classe prevista.
         int previsto = static_cast<int>(max_element(escores, escores + classes) - escores);
-        bool acertou = previsto == amostra.rotulo;
+        bool acertou = previsto == rotulo;
         acertos += acertou;
-        ++confusoes[amostra.rotulo][previsto];
-        perda_total += perda(escores, amostra.rotulo);
+        ++confusoes[rotulo][previsto];
+        perda_total += perda(escores, rotulo);
 
         // Guarda até três acertos e três erros para ilustrar a saída.
         // A acurácia usa todas as imagens, inclusive as não exibidas.
@@ -211,7 +218,7 @@ void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3,
                     segundo = classe;
                 }
             }
-            exemplos.push_back({i + 1, amostra.rotulo, previsto, segundo,
+            exemplos.push_back({i + 1, rotulo, previsto, segundo,
                                 escores[previsto], escores[segundo]});
             ++exemplos_tipo;
         }
@@ -294,9 +301,9 @@ int main(int argc, char** argv) {
         for (int epoca = 0; epoca < epocas; ++epoca) {
             double perda_total = 0;
             // Uma época percorre todo o conjunto na ordem do arquivo.
-            for (const auto& amostra : treino) {
-                const float* escores = l3.Forward(l2.Forward(l1.Forward(amostra.imagem.data())));
-                perda_total += Barenn::perda(escores, amostra.rotulo, gradiente.data());
+            for (size_t i = 0; i < treino.size(); ++i) {
+                const float* escores = l3.Forward(l2.Forward(l1.Forward(treino.imagem(i))));
+                perda_total += Barenn::perda(escores, treino.rotulos[i], gradiente.data());
 
                 // Propaga o gradiente da última camada até a primeira.
                 // Cada Backward também atualiza os parâmetros da sua camada.
