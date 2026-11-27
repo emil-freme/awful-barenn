@@ -122,6 +122,12 @@ public:
 
         // SGD por amostra. O gradiente do peso é delta vezes a entrada.
         // O gradiente do viés é o próprio delta.
+        // Experimento (make OPT="-O3 -DOMP_NA_AMOSTRA"): divide a atualização entre
+        // threads dentro de cada amostra. O resultado é o mesmo, mas abre uma
+        // região paralela por camada por amostra.
+#ifdef OMP_NA_AMOSTRA
+        #pragma omp parallel for schedule(static)
+#endif
         for (int j = 0; j < in_features; ++j) {
             const float x = last_input[j];
             float* w = &weights[j * out_features];
