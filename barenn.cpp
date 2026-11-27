@@ -4,6 +4,7 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -347,6 +348,11 @@ int main(int argc, char** argv) {
     }
     const string arquivo_treino = argc == 3 ? argv[1] : "optdigits.tra";
     const string arquivo_teste = argc == 3 ? argv[2] : "optdigits.tes";
+    // Sem OMP_SCHEDULE a libgomp usa dynamic com chunk 1, o pior na avaliação
+    // (ver issue #5). Com a variável definida, vale o que ela pedir.
+    if (!getenv("OMP_SCHEDULE")) {
+        omp_set_schedule(omp_sched_guided, 0);
+    }
 
     try {
         const double inicio_programa = omp_get_wtime();
