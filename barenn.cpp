@@ -22,6 +22,8 @@ namespace Barenn {
 // Cada imagem tem 64 atributos e pertence a uma das dez classes.
 constexpr int entradas = 64;
 constexpr int classes = 10;
+constexpr int oculta1 = 32;
+constexpr int oculta2 = 16;
 
 class DenseLayer {
     int in_features;
@@ -74,6 +76,26 @@ public:
             out[i] = final ? z[i] : max(0.0f, z[i]);
         }
         return out.data();
+    }
+
+    // Forward sem efeito colateral: não escreve nos buffers da camada, então
+    // várias threads podem chamar ao mesmo tempo. Mesma conta do Forward.
+    void Inferir(const float* input, float* saida) const {
+        for (int i = 0; i < out_features; ++i) {
+            saida[i] = bias[i];
+        }
+        for (int j = 0; j < in_features; ++j) {
+            const float x = input[j];
+            const float* w = &weights[j * out_features];
+            for (int i = 0; i < out_features; ++i) {
+                saida[i] += x * w[i];
+            }
+        }
+        if (!final) {
+            for (int i = 0; i < out_features; ++i) {
+                saida[i] = max(0.0f, saida[i]);
+            }
+        }
     }
 
     // a primeira camada não precisa do gradiente da entrada
@@ -196,8 +218,23 @@ float perda(const float* escores, int rotulo, float* gradiente = nullptr) {
     return total;
 }
 
-void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3,
+void avaliar(const DenseLayer& l1, const DenseLayer& l2, const DenseLayer& l3,
              const Dados& teste) {
+    // Parte paralela: o forward de cada imagem é independente. Cada thread usa
+    // ativações locais e escreve só nos escores da própria imagem.
+    const long n = static_cast<long>(teste.size());
+    vector<float> escores_todos(static_cast<size_t>(n) * classes);
+    const double inicio = omp_get_wtime();
+    #pragma omp parallel for schedule(runtime)
+    for (long i = 0; i < n; ++i) {
+        array<float, oculta1> a1;
+        array<float, oculta2> a2;
+        l1.Inferir(teste.imagem(i), a1.data());
+        l2.Inferir(a1.data(), a2.data());
+        l3.Inferir(a2.data(), &escores_todos[i * classes]);
+    }
+    const double tempo = omp_get_wtime() - inicio;
+
     struct Exemplo {
         size_t linha;
         int real;
@@ -218,7 +255,7 @@ void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3,
     // Só fazemos forward aqui. Os pesos ficam fixos.
     for (size_t i = 0; i < teste.size(); ++i) {
         const int rotulo = teste.rotulos[i];
-        const float* escores = l3.Forward(l2.Forward(l1.Forward(teste.imagem(i))));
+        const float* escores = &escores_todos[i * classes];
         // O índice do maior escore indica a classe prevista.
         int previsto = static_cast<int>(max_element(escores, escores + classes) - escores);
         bool acertou = previsto == rotulo;
@@ -286,6 +323,8 @@ void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3,
                 << "  " << setw(11) << erro.ocorrencias << '\n';
         }
     }
+    cout << "Tempo de avaliacao " << setprecision(6) << tempo << " s | "
+         << omp_get_max_threads() << " thread(s)\n";
 }
 
 } // namespace Barenn
@@ -310,9 +349,9 @@ int main(int argc, char** argv) {
         constexpr int epocas = 51;
         constexpr float taxa = 0.02f;
         // Rede densa com dimensões 64 -> 32 -> 16 -> 10.
-        Barenn::DenseLayer l1(Barenn::entradas, 32);
-        Barenn::DenseLayer l2(32, 16);
-        Barenn::DenseLayer l3(16, Barenn::classes, true);
+        Barenn::DenseLayer l1(Barenn::entradas, Barenn::oculta1);
+        Barenn::DenseLayer l2(Barenn::oculta1, Barenn::oculta2);
+        Barenn::DenseLayer l3(Barenn::oculta2, Barenn::classes, true);
         array<float, Barenn::classes> gradiente{};
         array<double, epocas> perdas{};
 
@@ -346,6 +385,8 @@ int main(int argc, char** argv) {
         cout << "Tempo de leitura " << setprecision(6) << tempo_leitura << " s\n"
              << setprecision(4);
         Barenn::avaliar(l1, l2, l3, teste);
+        cout << "Tempo de execucao " << setprecision(6)
+             << omp_get_wtime() - inicio_programa << " s\n";
     } catch (const exception& erro) {
         cerr << "Erro: " << erro.what() << "\n";
         return 1;
