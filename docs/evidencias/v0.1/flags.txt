@@ -1,0 +1,9 @@
+# Notebook i7-10510U, g++ 16.2.1. Saída comparada com referencia/saida_legado.txt (sem linhas Tempo).
+# FMA = número de instruções vfmadd no binário (objdump -d | grep -c vfmadd)
+sem flags                              FMA=0    IGUAL   Tempo de treino 31.5612 s
+-O3                                    FMA=0    IGUAL   Tempo de treino 1.0705 s
+-O3 -ffp-contract=off                  FMA=0    IGUAL   Tempo de treino 1.0880 s
+-O3 -march=native                      FMA=167  IGUAL   Tempo de treino 0.9433 s
+-O3 -march=native -ffp-contract=off    FMA=0    IGUAL   Tempo de treino 0.9619 s
+
+-O3 e -O3 -ffp-contract=off geram o mesmo código (objdump igual)
