@@ -1,3 +1,20 @@
+# Barenn: resultados
+
+| Versão | O que mudou | Treino (s) | Speedup vs v0.1 | Issue | Tag |
+|---|---|---:|---:|---|---|
+| legado | código original, `g++ barenn.cpp` sem flags | 5,19 | 0,07x | [#1](https://github.com/felipebns/awful-barenn/issues/1) | – |
+| **v0.1** (baseline) | Makefile `-O3`, referência e scripts | 0,354 | 1,00x | [#1](https://github.com/felipebns/awful-barenn/issues/1) | [`v0.1-baseline`](https://github.com/felipebns/awful-barenn/releases/tag/v0.1-baseline) |
+
+Treino: 51 épocas com `optdigits.tra`, média de 5 execuções no Franky (compute10, i7-13700T, g++ 14.2), todas as versões no mesmo job. Todas geram a mesma saída do legado (`scripts/validar.sh`).
+
+Para reproduzir:
+```bash
+git checkout <tag> && make
+scripts/validar.sh ./barenn && scripts/bench.sh 5 ./barenn     # no Franky: sbatch slurm/cpu.slurm
+```
+
+---
+
 # Projeto Barenn: O Legado, a Sobrevivência e o Salto para a GPU
 
 Era uma segunda-feira aparentemente tranquila quando a demanda chegou à sua mesa. A liderança técnica se aproximou com um sorriso contido e soltou aquela frase clássica que faz qualquer engenheiro gelar por dentro:
