@@ -4,3 +4,6 @@ barenn
 # saídas geradas (as evidências vão para docs/evidencias e para as issues)
 callgrind.out.*
 barenn-*.out
+
+# teste com volume maior (gerado por scripts/teste_grande.sh)
+optdigits_x*.tes
