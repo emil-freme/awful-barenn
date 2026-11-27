@@ -1,0 +1,39 @@
+# Franky, job 31094 (nó exclusivo): legado sem flags e v0.1 (make)
+Job 31094 | nó compute10 | Fri Nov 27 02:07:04 PM EST 2026 | cpus-per-task=16
+CPU(s):                               24
+Model name:                           13th Gen Intel(R) Core(TM) i7-13700T
+Thread(s) per core:                   2
+Core(s) per socket:                   16
+CPU(s) scaling MHz:                   28%
+L1d cache:                            640 KiB (16 instances)
+L2 cache:                             24 MiB (10 instances)
+L3 cache:                             30 MiB (1 instance)
+g++ (GCC) 14.2.0
+===== legado sem flags (g++ barenn.cpp)
+Tempo de treino 5.1891 s
+Tempo de treino 5.1922 s
+Tempo de treino 5.1872 s
+===== commits (1 thread)
+-- legado
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.353760 s | desvio 0.000581 s | min 0.352800 s | valores: 0.3539 0.3543 0.3541 0.3528 0.3537
+
+# Medições de outros dias (mesmo código), para comparar a variação entre dias
+# 2026-11-18, Franky, srun --partition=merry_cpu (i7-13700T), g++ 14.2.0
+# legado compilado sem flags: g++ barenn.cpp -o legado_sem_flags
+== sem flags (g++ barenn.cpp)
+Tempo de treino 5.3144 s
+Tempo de treino 5.3238 s
+Tempo de treino 5.3138 s
+
+Job 30663 | nó compute10 | Thu Nov 19 12:57:04 PM EST 2026
+CPU(s):                               24
+Model name:                           13th Gen Intel(R) Core(TM) i7-13700T
+Thread(s) per core:                   2
+CPU(s) scaling MHz:                   22%
+L1d cache:                            640 KiB (16 instances)
+L2 cache:                             24 MiB (10 instances)
+L3 cache:                             30 MiB (1 instance)
+g++ (GCC) 14.2.0
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino    n=5 | media 0.362100 s | desvio 0.000510 s | min 0.361300 s | valores: 0.3613 0.3627 0.3621 0.3623 0.3621

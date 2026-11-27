@@ -1,0 +1,59 @@
+# Notebook i7-10510U (L1d 32 KB, L2 256 KB, L3 8 MB), g++ 16.2.1, valgrind 3.25.1
+# g++ -std=c++17 -O3 -ffp-contract=off barenn.cpp -o legado
+# valgrind --tool=callgrind --cache-sim=yes --callgrind-out-file=cg_legado.out ./legado
+
+I   refs:      9,224,407,696
+I1  misses:           26,118
+LLi misses:            2,933
+D   refs:      2,886,537,309  (2,564,417,903 rd + 322,119,406 wr)
+D1  misses:          966,124  (      933,113 rd +      33,011 wr)
+LLd misses:           37,938  (        9,002 rd +      28,936 wr)
+LL refs:             992,242  (      959,231 rd +      33,011 wr)
+LL misses:            40,871  (       11,935 rd +      28,936 wr)
+
+## custo próprio (callgrind_annotate --show=Ir,Dr,D1mr,DLmr)
+9,224,407,698 (100.0%) 2,564,417,903 (100.0%) 933,113 (100.0%) 9,002 (100.0%)  PROGRAM TOTALS
+Ir                     Dr                     D1mr             DLmr            file:function
+--------------------------------------------------------------------------------
+8,517,031,779 (92.33%) 2,370,374,020 (92.43%) 101,733 (10.90%)     1 ( 0.01%)  ???:main 
+   97,720,208 ( 1.06%)    26,653,696 ( 1.04%)   1,574 ( 0.17%)     1 ( 0.01%)  ???:free 
+   88,421,479 ( 0.96%)    17,696,709 ( 0.69%)      93 ( 0.01%)     3 ( 0.03%)  ???:malloc 
+   66,413,116 ( 0.72%)    12,368,641 ( 0.48%)      24 ( 0.00%)     1 ( 0.01%)  ???:strtof_l 
+   47,145,504 ( 0.51%)    11,786,376 ( 0.46%)       6 ( 0.00%)     .           libsupc++/../../../../gcc/libstdc++-v3/libsupc++/new_op.cc:operator new(unsigned long) 
+   32,001,074 ( 0.35%)    10,957,709 ( 0.43%)      25 ( 0.00%)     .           include/bits/locale_facets.tcc:std::num_get<char, std::istreambuf_iterator<char, std::char_
+   28,282,025 ( 0.31%)     8,276,709 ( 0.32%) 787,193 (84.36%)     2 ( 0.02%)  ???:0x0000000000176380 
+   27,959,230 ( 0.30%)     2,541,878 ( 0.10%)       1 ( 0.00%)     0           ???:0x0000000000176d80 
+   27,796,574 ( 0.30%)     9,497,816 ( 0.37%)      17 ( 0.00%)     2 ( 0.02%)  include/bits/istream.tcc:std::istream::sentry::sentry(std::istream&, bool) 
+
+## custo inclusivo de ler_dados e avaliar (callgrind_annotate --inclusive=yes)
+414,924,018 ( 4.50%) ler_dados
+22,976,492 ( 0.25%) avaliar
+
+## quem chama a função da libc com 84% das falhas de L1 (callgrind_annotate --tree=caller)
+   27,296,259 ( 0.30%) 779,994 (83.59%)  < ???:main (1,364,814x) 
+   28,282,025 ( 0.31%) 787,193 (84.36%)  *  ???:0x0000000000176380 
+
+## instruções por trecho do barenn.cpp (make OPT="-O3 -g"; callgrind_annotate --auto=yes barenn.cpp)
+## o Forward e o Backward estão inlined no main, então a divisão é feita pelas linhas do fonte
+trecho                                         Ir      %
+Forward (l. 49-64)                  2,202,315,437  23.9%
+Backward delta (l. 66-75)              89,830,092   1.0%
+Backward grad_in (l. 76-85)         4,423,157,478  48.0%
+Backward atualizacao (l. 86-95)     1,400,491,059  15.2%
+resto do barenn.cpp                    28,033,270   0.3%
+fora do barenn.cpp (libs, STL)      1,080,583,197  11.7%
+total                               9,224,410,533
+
+## linhas com mais de 0,1 G instruções
+l.  56  0.338 G | for (int j = 0; j < in_features; ++j) {
+l.  57  1.739 G | sum += input[j] * weights[i][j];
+l.  79  2.147 G | for (int j = 0; j < out_features; ++j) {
+l.  80  2.121 G | sum += delta[j] * weights[j][i];
+l.  88  0.475 G | for (int j = 0; j < in_features; ++j) {
+l.  89  0.831 G | weights[i][j] -= learning_rate * (delta[i] * last_input[j]);
+
+## laços vetorizados (g++ -O3 -ffp-contract=off -fopt-info-vec-optimized)
+barenn.cpp:37:11: optimized: basic block part vectorized using 8 byte vectors
+barenn.cpp:56:31: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+barenn.cpp:88:31: optimized: loop vectorized using 16 byte vectors and unroll factor 4
+barenn.cpp:151:29: optimized: basic block part vectorized using 8 byte vectors
