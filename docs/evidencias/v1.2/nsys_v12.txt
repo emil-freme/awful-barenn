@@ -1,0 +1,70 @@
+TREINO | 3823 imagens
+Epoca  1/51 | perda media 0.4129
+Epoca  6/51 | perda media 0.0442
+Epoca 11/51 | perda media 0.0312
+Epoca 16/51 | perda media 0.0261
+Epoca 21/51 | perda media 0.0227
+Epoca 26/51 | perda media 0.0204
+Epoca 31/51 | perda media 0.0184
+Epoca 36/51 | perda media 0.0169
+Epoca 41/51 | perda media 0.0155
+Epoca 46/51 | perda media 0.0145
+Epoca 51/51 | perda media 0.0135
+Tempo de treino 0.3589 s
+
+AVALIACAO FINAL
+Acuracia 95.5% | 1717 acertos em 1797 imagens
+Perda media 0.0432
+
+ALGUMAS INFERENCIAS
+Esperado  Previsto
+       0         0
+       1         1
+       2         8
+       3         3
+       5         9
+       7         9
+
+CONFUSOES MAIS FREQUENTES
+Esperado  Previsto  Ocorrencias
+       7         9            9
+       8         1            6
+       3         2            5
+Tempo de avaliacao 0.031576 s
+Collecting data...
+Generating '/tmp/nsys-report-244f.qdstrm'
+
+[3/6] Executing 'cuda_api_sum' stats report
+
+ Time (%)  Total Time (ns)  Num Calls   Avg (ns)    Med (ns)  Min (ns)   Max (ns)    StdDev (ns)            Name
+ --------  ---------------  ---------  -----------  --------  --------  -----------  ------------  ----------------------
+     83.8      382,389,060      1,807    211,615.4  13,008.0     1,376  358,650,185   8,436,767.5  cudaMemcpy
+     14.6       66,773,841         14  4,769,560.1   1,152.0       742   66,700,091  17,824,839.1  cudaFree
+      1.6        7,088,195      5,392      1,314.6   1,266.0     1,182       85,070       1,165.5  cudaLaunchKernel
+      0.0           70,320         13      5,409.2   1,558.0     1,067       46,003      12,278.1  cudaMalloc
+      0.0            1,085          1      1,085.0   1,085.0     1,085        1,085           0.0  cuModuleGetLoadingMode
+
+[4/6] Executing 'cuda_gpu_kern_sum' stats report
+
+ Time (%)  Total Time (ns)  Instances    Avg (ns)       Med (ns)      Min (ns)     Max (ns)    StdDev (ns)                                                  Name
+ --------  ---------------  ---------  -------------  -------------  -----------  -----------  -----------  ----------------------------------------------------------------------------------------------------
+     97.2      358,642,091          1  358,642,091.0  358,642,091.0  358,642,091  358,642,091          0.0  Barenn::treinar_gpu(const float *, const int *, int, int, float, float *, float *, float *, float *…
+      2.8       10,306,880      5,391        1,911.9        1,600.0        1,247        3,328        706.6  Barenn::forward_gpu(const float *, const float *, const float *, int, int, bool, float *)
+
+[5/6] Executing 'cuda_gpu_mem_time_sum' stats report
+
+ Time (%)  Total Time (ns)  Count  Avg (ns)  Med (ns)  Min (ns)  Max (ns)  StdDev (ns)           Operation
+ --------  ---------------  -----  --------  --------  --------  --------  -----------  ----------------------------
+     92.2        1,434,438  1,798     797.8     800.0       767     1,280         38.3  [CUDA memcpy Device-to-Host]
+      7.8          121,725      9  13,525.0     512.0       384    78,494     27,378.3  [CUDA memcpy Host-to-Device]
+
+[6/6] Executing 'cuda_gpu_mem_size_sum' stats report
+
+ Total (MB)  Count  Avg (MB)  Med (MB)  Min (MB)  Max (MB)  StdDev (MB)           Operation
+ ----------  -----  --------  --------  --------  --------  -----------  ----------------------------
+      1.465      9     0.163     0.002     0.000     0.979        0.341  [CUDA memcpy Host-to-Device]
+      0.072  1,798     0.000     0.000     0.000     0.000        0.000  [CUDA memcpy Device-to-Host]
+
+Generated:
+    /home/felipebns/campanha_aps2/resultados/perfil_v12.nsys-rep
+    /home/felipebns/campanha_aps2/resultados/perfil_v12.sqlite

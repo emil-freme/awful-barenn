@@ -1,0 +1,108 @@
+Job 31092 | nó compute20 | Fri Nov 27 01:41:11 PM EST 2026
+name, memory.total [MiB], driver_version, clocks.max.sm [MHz]
+NVIDIA RTX A1000, 8188 MiB, 570.124.06, 2100 MHz
+Model name:                           Intel(R) Core(TM) i9-14900
+/var/spool/slurmd/job31092/slurm_script: line 16: nvcc: command not found
+===== v12
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.397540 s | desvio 0.000780 s | min 0.397100 s | valores: 0.3971 0.3975 0.3971 0.3971 0.3989
+Tempo de avaliacao  n=5 | media 0.026101 s | desvio 0.000208 s | min 0.025968 s | valores: 0.025968 0.026041 0.026006 0.026022 0.026470
+-- x50
+Tempo de treino     n=5 | media 0.397240 s | desvio 0.000288 s | min 0.396800 s | valores: 0.3968 0.3972 0.3976 0.3973 0.3973
+Tempo de avaliacao  n=5 | media 1.292215 s | desvio 0.000606 s | min 1.291487 s | valores: 1.292936 1.291487 1.292112 1.292720 1.291821
+===== v1.2: threads por bloco no treino
+-- BLOCO_TREINO=64
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.536920 s | desvio 0.000955 s | min 0.536200 s | valores: 0.5362 0.5386 0.5366 0.5366 0.5366
+Tempo de avaliacao  n=5 | media 0.026033 s | desvio 0.000074 s | min 0.025930 s | valores: 0.026021 0.025930 0.026018 0.026131 0.026066
+-- BLOCO_TREINO=256
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.333580 s | desvio 0.000466 s | min 0.332900 s | valores: 0.3329 0.3338 0.3333 0.3340 0.3339
+Tempo de avaliacao  n=5 | media 0.026073 s | desvio 0.000138 s | min 0.025975 s | valores: 0.026011 0.026066 0.026002 0.025975 0.026313
+-- BLOCO_TREINO=512
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.340800 s | desvio 0.000265 s | min 0.340400 s | valores: 0.3409 0.3404 0.3407 0.3409 0.3411
+Tempo de avaliacao  n=5 | media 0.026205 s | desvio 0.000197 s | min 0.025969 s | valores: 0.026140 0.026451 0.026103 0.026361 0.025969
+
+# Versão final, 256 threads por bloco (job 31095)
+Job 31095 | nó compute20 | Fri Nov 27 02:06:04 PM EST 2026
+name, memory.total [MiB], driver_version, clocks.max.sm [MHz], pcie.link.gen.max, pcie.link.width.max
+NVIDIA RTX A1000, 8188 MiB, 570.124.06, 2100 MHz, 4, 16
+===== v12_bloco256
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 0.332460 s | desvio 0.000594 s | min 0.331900 s | valores: 0.3331 0.3322 0.3319 0.3331 0.3320
+Tempo de avaliacao  n=5 | media 0.027059 s | desvio 0.000922 s | min 0.026034 s | valores: 0.026065 0.027737 0.027722 0.026034 0.027739
+-- x50
+Tempo de treino     n=5 | media 0.332420 s | desvio 0.000567 s | min 0.332000 s | valores: 0.3324 0.3321 0.3320 0.3322 0.3334
+Tempo de avaliacao  n=5 | media 1.347258 s | desvio 0.050463 s | min 1.291420 s | valores: 1.292541 1.384458 1.384014 1.383855 1.291420
+
+# Programa inteiro com time (job 31108)
+-- v12_bloco256
+wall 2.503 s
+wall 2.493 s
+wall 2.494 s
+wall 2.492 s
+wall 2.479 s
+-- v12_bloco256 x50
+wall 4.136 s
+wall 4.130 s
+wall 4.146 s
+
+# Mesma versão compilada SEM -fmad=false (FMA ligado)
+nó compute20
+VALIDACAO FALHOU
+Tempo de treino     n=5 | media 0.332400 s | desvio 0.000158 s | min 0.332200 s | valores: 0.3323 0.3324 0.3326 0.3322 0.3325
+Tempo de avaliacao  n=5 | media 0.027724 s | desvio 0.000010 s | min 0.027707 s | valores: 0.027707 0.027727 0.027725 0.027734 0.027727
+Tempo de treino     n=5 | media 0.325880 s | desvio 0.000110 s | min 0.325700 s | valores: 0.3257 0.3259 0.3259 0.3259 0.3260
+Tempo de avaliacao  n=5 | media 0.027719 s | desvio 0.000006 s | min 0.027713 s | valores: 0.027713 0.027719 0.027729 0.027714 0.027721
+--- scripts/../referencia/saida_legado.txt	2026-11-27 13:39:33.060913037 -0500
++++ -	2026-11-27 14:21:06.243709304 -0500
+@@ -7,13 +7,13 @@
+ Epoca 26/51 | perda media 0.0204
+ Epoca 31/51 | perda media 0.0184
+ Epoca 36/51 | perda media 0.0169
+-Epoca 41/51 | perda media 0.0155
+-Epoca 46/51 | perda media 0.0145
++Epoca 41/51 | perda media 0.0156
++Epoca 46/51 | perda media 0.0144
+ Epoca 51/51 | perda media 0.0135
+ 
+ AVALIACAO FINAL
+-Acuracia 95.5% | 1717 acertos em 1797 imagens
+-Perda media 0.0432
++Acuracia 95.6% | 1718 acertos em 1797 imagens
++Perda media 0.0438
+ 
+ ALGUMAS INFERENCIAS
+ Esperado  Previsto
+@@ -26,6 +26,6 @@
+ 
+ CONFUSOES MAIS FREQUENTES
+ Esperado  Previsto  Ocorrencias
+-       7         9            9
++       7         9            8
++       3         2            6
+        8         1            6
+-       3         2            5
+VALIDACAO FALHOU: veja as diferencas acima
+
+# ptxas -v do kernel de treino
+== v12
+ptxas info    : Compiling entry function '_ZN6Barenn11treinar_gpuEPKfPKiiifPfS4_S4_S4_S4_S4_Pd' for 'sm_86'
+ptxas info    : Function properties for _ZN6Barenn11treinar_gpuEPKfPKiiifPfS4_S4_S4_S4_S4_Pd
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 37 registers, used 1 barriers, 12436 bytes smem, 440 bytes cmem[0]
+== v13
+ptxas info    : Compiling entry function '_ZN6Barenn11treinar_gpuEPKfPKiiifPfS4_S4_S4_S4_S4_Pd' for 'sm_86'
+ptxas info    : Function properties for _ZN6Barenn11treinar_gpuEPKfPKiiifPfS4_S4_S4_S4_S4_Pd
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 37 registers, used 1 barriers, 12436 bytes smem, 440 bytes cmem[0]
+
+# Propriedades da GPU
+nome NVIDIA RTX A1000 | sm_86
+SMs 18 | max threads/SM 1536 | max threads/bloco 1024 | max blocos/SM 16 | warp 32
+registradores/SM 65536 | shared/SM 102400 B | shared/bloco 49152 B
+clock SM 1462000 kHz | clock memoria 6001000 kHz | barramento 128 bits
+
+# Ocupação real: ncu e nsys --gpu-metrics-devices=all falham no Franky com
+# 'Insufficient privilege, see https://developer.nvidia.com/ERR_NVGPUCTRPERM'
