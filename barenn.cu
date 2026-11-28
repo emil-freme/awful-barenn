@@ -69,17 +69,20 @@ int grade(int n) { return (n + bloco - 1) / bloco; }
 
 // pesos[j * n_saidas + i], igual à CPU
 
-// uma thread por neurônio
-__global__ void forward_gpu(const float* entrada, const float* pesos,
-                            const float* vies, int n_entradas, int n_saidas,
-                            bool final, float* saida) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= n_saidas) return;
+// forward de um lote: uma thread por (amostra, neurônio)
+__global__ void forward_lote_gpu(const float* entrada, const float* pesos,
+                                 const float* vies, int n_entradas, int n_saidas,
+                                 bool final, int n_amostras, float* saida) {
+    const int k = blockIdx.x * blockDim.x + threadIdx.x;
+    if (k >= n_amostras * n_saidas) return;
+    const int amostra = k / n_saidas;
+    const int i = k % n_saidas;
+    const float* x = entrada + static_cast<size_t>(amostra) * n_entradas;
     float soma = vies[i];
     for (int j = 0; j < n_entradas; ++j) {
-        soma += entrada[j] * pesos[j * n_saidas + i];
+        soma += x[j] * pesos[j * n_saidas + i];
     }
-    saida[i] = final ? soma : (0.0f < soma ? soma : 0.0f);
+    saida[k] = final ? soma : (0.0f < soma ? soma : 0.0f);
 }
 
 // Treino inteiro em um kernel de 1 bloco (o SGD é sequencial). O modelo fica
@@ -225,13 +228,11 @@ class DenseLayer {
     bool final;
     BufferGpu weights;
     BufferGpu bias;
-    BufferGpu out;
 
 public:
     DenseLayer(int input_size, int output_size, bool is_final = false)
         : in_features(input_size), out_features(output_size), final(is_final),
-          weights(static_cast<size_t>(input_size) * output_size), bias(output_size),
-          out(output_size) {
+          weights(static_cast<size_t>(input_size) * output_size), bias(output_size) {
         vector<float> pesos(static_cast<size_t>(in_features) * out_features);
         vector<float> vies(out_features, 0.0f);
         mt19937 gen(1337);
@@ -248,12 +249,12 @@ public:
     float* pesos_gpu() const { return weights.data(); }
     float* vies_gpu() const { return bias.data(); }
 
-    const float* Forward(const float* input_gpu) {
-        forward_gpu<<<grade(out_features), bloco>>>(
-            input_gpu, weights.data(), bias.data(), in_features, out_features,
-            final, out.data());
+    void ForwardLote(const float* entrada_gpu, float* saida_gpu, int n,
+                     cudaStream_t stream) const {
+        forward_lote_gpu<<<grade(n * out_features), bloco, 0, stream>>>(
+            entrada_gpu, weights.data(), bias.data(), in_features, out_features,
+            final, n, saida_gpu);
         verificar(cudaGetLastError());
-        return out.data();
     }
 };
 
@@ -323,7 +324,7 @@ float perda(const float* escores, int rotulo, float* gradiente = nullptr) {
     return total;
 }
 
-void relatar(const vector<float>& escores_todos, const Dados& teste) {
+void relatar(const float* escores_todos, const Dados& teste) {
     // Linhas representam a classe esperada e colunas, a classe prevista.
     array<array<size_t, classes>, classes> confusoes{};
     struct Exemplo {
@@ -400,19 +401,84 @@ void relatar(const vector<float>& escores_todos, const Dados& teste) {
     }
 }
 
-void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3, const Dados& teste) {
-    vector<float> escores(teste.size() * classes);
+// avaliação em pedaços alternados entre as streams; cada stream tem seus buffers
+#ifndef NSTREAMS
+#define NSTREAMS 2
+#endif
+#ifndef TAMANHO_PEDACO
+#define TAMANHO_PEDACO 1024
+#endif
+
+struct BuffersStream {
+    BufferGpu entrada{static_cast<size_t>(TAMANHO_PEDACO) * entradas};
+    BufferGpu a1{static_cast<size_t>(TAMANHO_PEDACO) * oculta1};
+    BufferGpu a2{static_cast<size_t>(TAMANHO_PEDACO) * oculta2};
+    BufferGpu escores{static_cast<size_t>(TAMANHO_PEDACO) * classes};
+};
+
+void avaliar(const DenseLayer& l1, const DenseLayer& l2, const DenseLayer& l3,
+             const Dados& teste) {
+    const int n = static_cast<int>(teste.size());
+    const size_t bytes_imagens = teste.imagens.size() * sizeof(float);
+    const size_t bytes_escores = teste.size() * classes * sizeof(float);
+
+    // mede tudo: memória pinned, cópias e kernels
     const auto inicio = chrono::steady_clock::now();
-    BufferGpu teste_gpu(teste.imagens.size());
-    teste_gpu.enviar(teste.imagens.data());
-    for (size_t i = 0; i < teste.size(); ++i) {
-        const float* s = l3.Forward(l2.Forward(l1.Forward(teste_gpu.data() + i * entradas)));
-        verificar(cudaMemcpy(&escores[i * classes], s, classes * sizeof(float),
-                             cudaMemcpyDeviceToHost));
+    float* h_imagens = nullptr;
+    float* h_escores = nullptr;
+    verificar(cudaMallocHost(&h_imagens, bytes_imagens));
+    verificar(cudaMallocHost(&h_escores, bytes_escores));
+    copy(teste.imagens.begin(), teste.imagens.end(), h_imagens);
+
+    cudaStream_t streams[NSTREAMS];
+    for (int s = 0; s < NSTREAMS; ++s) {
+        verificar(cudaStreamCreate(&streams[s]));
+    }
+    BuffersStream buffers[NSTREAMS];
+
+    for (int base = 0; base < n; base += NSTREAMS * TAMANHO_PEDACO) {
+        const int ativos =
+            min(NSTREAMS, (n - base + TAMANHO_PEDACO - 1) / TAMANHO_PEDACO);
+        // como na aula: primeiro as cópias do grupo, depois kernels, depois retornos
+        for (int s = 0; s < ativos; ++s) {
+            const int ini = base + s * TAMANHO_PEDACO;
+            const int qtd = min(TAMANHO_PEDACO, n - ini);
+            verificar(cudaMemcpyAsync(buffers[s].entrada.data(),
+                                      h_imagens + static_cast<size_t>(ini) * entradas,
+                                      static_cast<size_t>(qtd) * entradas * sizeof(float),
+                                      cudaMemcpyHostToDevice, streams[s]));
+        }
+        for (int s = 0; s < ativos; ++s) {
+            const int ini = base + s * TAMANHO_PEDACO;
+            const int qtd = min(TAMANHO_PEDACO, n - ini);
+            BuffersStream& b = buffers[s];
+            l1.ForwardLote(b.entrada.data(), b.a1.data(), qtd, streams[s]);
+            l2.ForwardLote(b.a1.data(), b.a2.data(), qtd, streams[s]);
+            l3.ForwardLote(b.a2.data(), b.escores.data(), qtd, streams[s]);
+        }
+        for (int s = 0; s < ativos; ++s) {
+            const int ini = base + s * TAMANHO_PEDACO;
+            const int qtd = min(TAMANHO_PEDACO, n - ini);
+            verificar(cudaMemcpyAsync(h_escores + static_cast<size_t>(ini) * classes,
+                                      buffers[s].escores.data(),
+                                      static_cast<size_t>(qtd) * classes * sizeof(float),
+                                      cudaMemcpyDeviceToHost, streams[s]));
+        }
+    }
+    for (int s = 0; s < NSTREAMS; ++s) {
+        verificar(cudaStreamSynchronize(streams[s]));
     }
     const chrono::duration<double> tempo = chrono::steady_clock::now() - inicio;
-    relatar(escores, teste);
-    cout << "Tempo de avaliacao " << setprecision(6) << tempo.count() << " s\n";
+
+    relatar(h_escores, teste);
+    cout << "Tempo de avaliacao " << setprecision(6) << tempo.count() << " s | "
+         << NSTREAMS << " stream(s), pedacos de " << TAMANHO_PEDACO << " imagens\n";
+
+    for (int s = 0; s < NSTREAMS; ++s) {
+        cudaStreamDestroy(streams[s]);
+    }
+    cudaFreeHost(h_imagens);
+    cudaFreeHost(h_escores);
 }
 
 } // namespace Barenn
