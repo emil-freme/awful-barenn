@@ -85,9 +85,10 @@ __global__ void forward_gpu(const float* entrada, const float* pesos,
 // Treino inteiro em um kernel de 1 bloco (o SGD é sequencial). O modelo fica
 // na memória compartilhada, com uma coluna extra por linha (passo O + 1) para
 // evitar conflito de banco no backward.
-// threads do bloco de treino (>= 64); ex.: make barenn_gpu DEFS=-DBLOCO_TREINO=64
+// threads do bloco de treino (>= 64); 256 foi o melhor entre 64, 128, 256 e 512 (ver issue #11)
+// ex.: make barenn_gpu DEFS=-DBLOCO_TREINO=64
 #ifndef BLOCO_TREINO
-#define BLOCO_TREINO 128
+#define BLOCO_TREINO 256
 #endif
 constexpr int bloco_treino = BLOCO_TREINO;
 static_assert(bloco_treino >= entradas, "o bloco carrega uma entrada por thread");
