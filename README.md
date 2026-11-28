@@ -8,8 +8,9 @@
 | **v0.3** (CPU otimizada) | OpenMP na leitura e na avaliação (8 threads) | 0,128 | 2,28 | 0,196 | [#5](https://github.com/felipebns/awful-barenn/issues/5) | [`v0.3-cpu-openmp`](https://github.com/felipebns/awful-barenn/releases/tag/v0.3-cpu-openmp) |
 | **v1.0** (CUDA inicial) | porte direto: kernels por operação, aloca e copia a cada chamada | 120,4 | 25.392 | 153,7 | [#7](https://github.com/felipebns/awful-barenn/issues/7) | [`v1.0-cuda-ingenuo`](https://github.com/felipebns/awful-barenn/releases/tag/v1.0-cuda-ingenuo) |
 | v1.1 | pesos, ativações e dados residentes na GPU | 5,28 | 1.293 | 8,59 | [#9](https://github.com/felipebns/awful-barenn/issues/9) | [`v1.1-cuda-residente`](https://github.com/felipebns/awful-barenn/releases/tag/v1.1-cuda-residente) |
+| v1.2 | treino num kernel só, modelo na memória compartilhada | 0,332 | 1.347 | 4,14 | [#11](https://github.com/felipebns/awful-barenn/issues/11) | [`v1.2-cuda-shared`](https://github.com/felipebns/awful-barenn/releases/tag/v1.2-cuda-shared) |
 
-Treino: 51 épocas com `optdigits.tra`. x50: `optdigits.tes` repetido 50 vezes (89.850 imagens, `scripts/teste_grande.sh 50`). Média de 5 execuções no Franky (v1.0: 3): CPU no compute10 (i7-13700T, 8 núcleos no job, g++ 14.2), GPU no compute20 (RTX A1000, CUDA 12.8). "–": a versão não mede a avaliação separada. Todas as versões geram a mesma saída do legado (`scripts/validar.sh`).
+Treino: 51 épocas com `optdigits.tra`. x50: `optdigits.tes` repetido 50 vezes (89.850 imagens, `scripts/teste_grande.sh 50`). Média de 5 execuções no Franky (v1.0: 3): CPU na fila `sunny_cpu`, nó compute10 exclusivo (i7-13700T, 8 núcleos no job, g++ 14.2; job 31094); GPU nas filas `pluton_gpu`/`sunny_gpu`, nó compute20 (RTX A1000, CUDA 12.8; jobs 31092, 31095 e 31108). `merry_cpu` e `sunny_cpu` usam os mesmos nós e só mudam o limite de tempo. "–": a versão não mede a avaliação separada. Todas as versões geram a mesma saída do legado (`scripts/validar.sh`).
 
 Para reproduzir:
 ```bash
