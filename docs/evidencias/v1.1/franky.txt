@@ -1,0 +1,24 @@
+Job 31092 | nó compute20 | Fri Nov 27 01:41:11 PM EST 2026
+name, memory.total [MiB], driver_version, clocks.max.sm [MHz]
+NVIDIA RTX A1000, 8188 MiB, 570.124.06, 2100 MHz
+Model name:                           Intel(R) Core(TM) i9-14900
+/var/spool/slurmd/job31092/slurm_script: line 16: nvcc: command not found
+===== v11
+VALIDACAO OK: saida identica a do legado (exceto linhas de tempo)
+Tempo de treino     n=5 | media 5.275720 s | desvio 0.378328 s | min 4.719900 s | valores: 5.3982 5.2961 4.7199 5.7676 5.1968
+Tempo de avaliacao  n=5 | media 0.026267 s | desvio 0.000803 s | min 0.025863 s | valores: 0.025939 0.025863 0.027702 0.025937 0.025894
+-- x50
+Tempo de treino     n=5 | media 5.688880 s | desvio 0.160391 s | min 5.514200 s | valores: 5.7707 5.8140 5.5154 5.8301 5.5142
+Tempo de avaliacao  n=5 | media 1.292862 s | desvio 0.000816 s | min 1.292000 s | valores: 1.292000 1.293460 1.292681 1.293931 1.292238
+
+# Programa inteiro com time (job 31108)
+-- v11
+wall 7.012 s
+wall 6.971 s
+wall 6.949 s
+wall 6.983 s
+wall 7.783 s
+-- v11 x50
+wall 8.621 s
+wall 8.546 s
+wall 8.597 s

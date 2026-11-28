@@ -110,82 +110,67 @@ __global__ void atualizar_gpu(const float* entrada, const float* delta,
     if (j == 0) vies[i] -= taxa * delta[i];
 }
 
-// porte direto: a cada chamada aloca na GPU, copia, executa e copia de volta
+// tudo fica na GPU; os ponteiros recebidos e devolvidos são da GPU
 class DenseLayer {
     int in_features;
     int out_features;
     bool final;
-    vector<float> weights;
-    vector<float> bias;
+    BufferGpu weights;
+    BufferGpu bias;
     const float* last_input = nullptr;
-    vector<float> last_z;
-    vector<float> out;
-    vector<float> grad_in;
+    BufferGpu last_z;
+    BufferGpu out;
+    BufferGpu delta;
+    BufferGpu grad_in;
 
 public:
     DenseLayer(int input_size, int output_size, bool is_final = false)
         : in_features(input_size), out_features(output_size), final(is_final),
-          weights(static_cast<size_t>(input_size) * output_size), bias(output_size, 0),
-          last_z(output_size), out(output_size), grad_in(input_size) {
+          weights(static_cast<size_t>(input_size) * output_size), bias(output_size),
+          last_z(output_size), out(output_size), delta(output_size),
+          grad_in(input_size) {
+        vector<float> pesos(static_cast<size_t>(in_features) * out_features);
+        vector<float> vies(out_features, 0.0f);
         mt19937 gen(1337);
         uniform_real_distribution<float> distribution(-0.05f, 0.05f);
         for (int i = 0; i < out_features; ++i) {
             for (int j = 0; j < in_features; ++j) {
-                weights[j * out_features + i] = distribution(gen);
+                pesos[j * out_features + i] = distribution(gen);
             }
         }
+        weights.enviar(pesos.data());
+        bias.enviar(vies.data());
     }
 
-    const float* Forward(const float* input) {
-        last_input = input;
-        BufferGpu d_entrada(in_features), d_pesos(weights.size()), d_vies(out_features);
-        BufferGpu d_z(out_features), d_saida(out_features);
-        d_entrada.enviar(input);
-        d_pesos.enviar(weights.data());
-        d_vies.enviar(bias.data());
+    float* pesos_gpu() const { return weights.data(); }
+    float* vies_gpu() const { return bias.data(); }
 
+    const float* Forward(const float* input_gpu) {
+        last_input = input_gpu;
         forward_gpu<<<grade(out_features), bloco>>>(
-            d_entrada.data(), d_pesos.data(), d_vies.data(), in_features,
-            out_features, final, d_z.data(), d_saida.data());
+            input_gpu, weights.data(), bias.data(), in_features, out_features,
+            final, last_z.data(), out.data());
         verificar(cudaGetLastError());
-
-        d_z.receber(last_z.data());
-        d_saida.receber(out.data());
         return out.data();
     }
 
-    const float* Backward(const float* grad_out, float learning_rate,
+    const float* Backward(const float* grad_out_gpu, float learning_rate,
                           bool propagate = true) {
-        BufferGpu d_entrada(in_features), d_pesos(weights.size()), d_vies(out_features);
-        BufferGpu d_grad_saida(out_features), d_z(out_features), d_delta(out_features);
-        BufferGpu d_grad_entrada(propagate ? in_features : 0);
-        d_entrada.enviar(last_input);
-        d_pesos.enviar(weights.data());
-        d_vies.enviar(bias.data());
-        d_grad_saida.enviar(grad_out);
-        d_z.enviar(last_z.data());
-
         delta_gpu<<<grade(out_features), bloco>>>(
-            d_grad_saida.data(), d_z.data(), final, out_features, d_delta.data());
+            grad_out_gpu, last_z.data(), final, out_features, delta.data());
         verificar(cudaGetLastError());
 
         // mesma stream: o gradiente usa os pesos antes da atualização
         if (propagate) {
             gradiente_entrada_gpu<<<grade(in_features), bloco>>>(
-                d_pesos.data(), d_delta.data(), in_features, out_features,
-                d_grad_entrada.data());
+                weights.data(), delta.data(), in_features, out_features,
+                grad_in.data());
             verificar(cudaGetLastError());
         }
         atualizar_gpu<<<grade(in_features * out_features), bloco>>>(
-            d_entrada.data(), d_delta.data(), in_features, out_features,
-            learning_rate, d_pesos.data(), d_vies.data());
+            last_input, delta.data(), in_features, out_features,
+            learning_rate, weights.data(), bias.data());
         verificar(cudaGetLastError());
-
-        d_pesos.receber(weights.data());
-        d_vies.receber(bias.data());
-        if (propagate) {
-            d_grad_entrada.receber(grad_in.data());
-        }
         return propagate ? grad_in.data() : nullptr;
     }
 };
@@ -336,9 +321,12 @@ void relatar(const vector<float>& escores_todos, const Dados& teste) {
 void avaliar(DenseLayer& l1, DenseLayer& l2, DenseLayer& l3, const Dados& teste) {
     vector<float> escores(teste.size() * classes);
     const auto inicio = chrono::steady_clock::now();
+    BufferGpu teste_gpu(teste.imagens.size());
+    teste_gpu.enviar(teste.imagens.data());
     for (size_t i = 0; i < teste.size(); ++i) {
-        const float* s = l3.Forward(l2.Forward(l1.Forward(teste.imagem(i))));
-        copy(s, s + classes, &escores[i * classes]);
+        const float* s = l3.Forward(l2.Forward(l1.Forward(teste_gpu.data() + i * entradas)));
+        verificar(cudaMemcpy(&escores[i * classes], s, classes * sizeof(float),
+                             cudaMemcpyDeviceToHost));
     }
     const chrono::duration<double> tempo = chrono::steady_clock::now() - inicio;
     relatar(escores, teste);
@@ -378,26 +366,35 @@ int main(int argc, char** argv) {
         Barenn::DenseLayer l1(Barenn::entradas, 32);
         Barenn::DenseLayer l2(32, 16);
         Barenn::DenseLayer l3(16, Barenn::classes, true);
-        array<float, Barenn::classes> gradiente{};
+        array<float, Barenn::classes> escores{}, gradiente{};
+        Barenn::BufferGpu gradiente_gpu(Barenn::classes);
         vector<double> perdas(epocas);
 
-        // A medição inclui forward, perda e backward de todas as épocas.
         const auto inicio = chrono::steady_clock::now();
+        Barenn::BufferGpu treino_gpu(treino.imagens.size());
+        treino_gpu.enviar(treino.imagens.data());
         for (int epoca = 0; epoca < epocas; ++epoca) {
             double perda_total = 0;
             // Uma época percorre todo o conjunto na ordem do arquivo.
             for (size_t i = 0; i < treino.size(); ++i) {
-                const float* escores = l3.Forward(l2.Forward(l1.Forward(treino.imagem(i))));
-                perda_total += Barenn::perda(escores, treino.rotulos[i], gradiente.data());
+                const float* entrada = treino_gpu.data() + i * Barenn::entradas;
+                const float* escores_gpu = l3.Forward(l2.Forward(l1.Forward(entrada)));
+                // a perda continua na CPU
+                Barenn::verificar(cudaMemcpy(escores.data(), escores_gpu,
+                                             sizeof(escores), cudaMemcpyDeviceToHost));
+                perda_total += Barenn::perda(escores.data(), treino.rotulos[i],
+                                             gradiente.data());
+                gradiente_gpu.enviar(gradiente.data());
 
                 // Propaga o gradiente da última camada até a primeira.
                 // Cada Backward também atualiza os parâmetros da sua camada.
-                const float* grad3 = l3.Backward(gradiente.data(), taxa);
+                const float* grad3 = l3.Backward(gradiente_gpu.data(), taxa);
                 const float* grad2 = l2.Backward(grad3, taxa);
                 l1.Backward(grad2, taxa, false);
             }
             perdas[epoca] = perda_total / treino.size();
         }
+        Barenn::verificar(cudaDeviceSynchronize());
         const chrono::duration<double> tempo = chrono::steady_clock::now() - inicio;
 
         // Imprime as métricas e roda a avaliação após encerrar o cronômetro.

@@ -1,0 +1,63 @@
+TREINO | 3823 imagens
+Epoca  1/1 | perda media 0.4129
+Tempo de treino 0.1797 s
+
+AVALIACAO FINAL
+Acuracia 63.9% | 1148 acertos em 1797 imagens
+Perda media 0.3087
+
+ALGUMAS INFERENCIAS
+Esperado  Previsto
+       0         0
+       1         1
+       2         1
+       3         3
+       5         3
+       8         2
+
+CONFUSOES MAIS FREQUENTES
+Esperado  Previsto  Ocorrencias
+       9         3           96
+       8         1           67
+       5         9           54
+Tempo de avaliacao 0.032953 s
+Collecting data...
+Generating '/tmp/nsys-report-fe44.qdstrm'
+
+[3/6] Executing 'cuda_api_sum' stats report
+
+ Time (%)  Total Time (ns)  Num Calls   Avg (ns)    Med (ns)  Min (ns)   Max (ns)   StdDev (ns)            Name
+ --------  ---------------  ---------  -----------  --------  --------  ----------  ------------  ----------------------
+     41.7      113,679,116      9,451     12,028.3  14,063.0     1,029      85,292       9,502.1  cudaMemcpy
+     33.4       91,064,045     47,444      1,919.4   1,279.0     1,151  28,271,026     129,862.2  cudaLaunchKernel
+     24.9       68,054,331         22  3,093,378.7   1,091.0       745  67,918,215  14,478,848.4  cudaFree
+      0.0           83,543         21      3,978.2   1,272.0       949      45,723       9,864.9  cudaMalloc
+      0.0            9,721          1      9,721.0   9,721.0     9,721       9,721           0.0  cudaDeviceSynchronize
+      0.0              696          1        696.0     696.0       696         696           0.0  cuModuleGetLoadingMode
+
+[4/6] Executing 'cuda_gpu_kern_sum' stats report
+
+ Time (%)  Total Time (ns)  Instances  Avg (ns)  Med (ns)  Min (ns)  Max (ns)  StdDev (ns)                                                 Name
+ --------  ---------------  ---------  --------  --------  --------  --------  -----------  --------------------------------------------------------------------------------------------------
+     47.7       40,239,316     16,860   2,386.7   2,048.0     1,631     3,968        777.8  Barenn::forward_gpu(const float *, const float *, const float *, int, int, bool, float *, float *)
+     20.6       17,340,725     11,469   1,512.0   1,504.0     1,471     1,568         23.8  Barenn::atualizar_gpu(const float *, const float *, int, int, float, float *, float *)
+     16.9       14,256,059     11,469   1,243.0   1,248.0     1,215     1,440         13.5  Barenn::delta_gpu(const float *, const float *, bool, int, float *)
+     14.8       12,472,260      7,646   1,631.2   1,632.0     1,599     1,856         25.8  Barenn::gradiente_entrada_gpu(const float *, const float *, int, int, float *)
+
+[5/6] Executing 'cuda_gpu_mem_time_sum' stats report
+
+ Time (%)  Total Time (ns)  Count  Avg (ns)  Med (ns)  Min (ns)  Max (ns)  StdDev (ns)           Operation
+ --------  ---------------  -----  --------  --------  --------  --------  -----------  ----------------------------
+     63.8        5,087,122  5,620     905.2     896.0       576     1,984         36.5  [CUDA memcpy Device-to-Host]
+     36.2        2,889,804  3,831     754.3     736.0       383    79,422      1,410.1  [CUDA memcpy Host-to-Device]
+
+[6/6] Executing 'cuda_gpu_mem_size_sum' stats report
+
+ Total (MB)  Count  Avg (MB)  Med (MB)  Min (MB)  Max (MB)  StdDev (MB)           Operation
+ ----------  -----  --------  --------  --------  --------  -----------  ----------------------------
+      1.603  3,831     0.000     0.000     0.000     0.979        0.017  [CUDA memcpy Host-to-Device]
+      0.225  5,620     0.000     0.000     0.000     0.000        0.000  [CUDA memcpy Device-to-Host]
+
+Generated:
+    /home/felipebns/campanha_aps2/resultados/perfil_v11.nsys-rep
+    /home/felipebns/campanha_aps2/resultados/perfil_v11.sqlite
