@@ -1,0 +1,66 @@
+TREINO | 3823 imagens
+Epoca  1/1 | perda media 0.4129
+Tempo de treino 0.0099 s
+
+AVALIACAO FINAL
+Acuracia 63.9% | 57400 acertos em 89850 imagens
+Perda media 0.3087
+
+ALGUMAS INFERENCIAS
+Esperado  Previsto
+       0         0
+       1         1
+       2         1
+       3         3
+       5         3
+       8         2
+
+CONFUSOES MAIS FREQUENTES
+Esperado  Previsto  Ocorrencias
+       9         3         4800
+       8         1         3350
+       5         9         2700
+Tempo de avaliacao 0.008344 s | 2 stream(s), pedacos de 1024 imagens
+Collecting data...
+Generating '/tmp/nsys-report-af3c.qdstrm'
+
+[3/6] Executing 'cuda_api_sum' stats report
+
+ Time (%)  Total Time (ns)  Num Calls   Avg (ns)     Med (ns)    Min (ns)   Max (ns)   StdDev (ns)            Name
+ --------  ---------------  ---------  -----------  -----------  --------  ----------  ------------  ----------------------
+     78.6       67,730,194         18  3,762,788.6      1,056.5       689  67,685,462  15,952,997.4  cudaFree
+      9.7        8,342,532          9    926,948.0      3,796.0     1,341   8,160,035   2,712,594.7  cudaMemcpy
+      4.9        4,189,679          2  2,094,839.5  2,094,839.5   575,133   3,614,546   2,149,189.5  cudaHostAlloc
+      2.7        2,366,590          2  1,183,295.0  1,183,295.0    23,809   2,342,781   1,639,760.8  cudaStreamSynchronize
+      2.2        1,928,261        265      7,276.5      1,228.0     1,142   1,568,033      96,246.2  cudaLaunchKernel
+      1.5        1,315,962          2    657,981.0    657,981.0   194,006   1,121,956     656,159.7  cudaFreeHost
+      0.2          211,543        176      1,201.9      1,132.0     1,053       6,686         450.0  cudaMemcpyAsync
+      0.1           68,410         17      4,024.1      1,325.0       706      44,524      10,483.6  cudaMalloc
+      0.0           16,669          2      8,334.5      8,334.5       759      15,910      10,713.4  cudaStreamCreate
+      0.0            4,954          2      2,477.0      2,477.0       729       4,225       2,472.0  cudaStreamDestroy
+      0.0              726          1        726.0        726.0       726         726           0.0  cuModuleGetLoadingMode
+
+[4/6] Executing 'cuda_gpu_kern_sum' stats report
+
+ Time (%)  Total Time (ns)  Instances   Avg (ns)     Med (ns)    Min (ns)   Max (ns)   StdDev (ns)                                                  Name
+ --------  ---------------  ---------  -----------  -----------  ---------  ---------  -----------  ----------------------------------------------------------------------------------------------------
+     81.7        8,152,074          1  8,152,074.0  8,152,074.0  8,152,074  8,152,074          0.0  Barenn::treinar_gpu(const float *, const int *, int, int, float, float *, float *, float *, float *…
+     18.3        1,826,871        264      6,920.0      4,704.0      2,336     20,928      4,733.6  Barenn::forward_lote_gpu(const float *, const float *, const float *, int, int, bool, int, float *)
+
+[5/6] Executing 'cuda_gpu_mem_time_sum' stats report
+
+ Time (%)  Total Time (ns)  Count  Avg (ns)  Med (ns)  Min (ns)  Max (ns)  StdDev (ns)           Operation
+ --------  ---------------  -----  --------  --------  --------  --------  -----------  ----------------------------
+     83.4        2,135,282     96  22,242.5  23,232.0       384    78,622      8,333.3  [CUDA memcpy Host-to-Device]
+     16.6          424,945     89   4,774.7   4,415.0     1,376     7,424      1,139.3  [CUDA memcpy Device-to-Host]
+
+[6/6] Executing 'cuda_gpu_mem_size_sum' stats report
+
+ Total (MB)  Count  Avg (MB)  Med (MB)  Min (MB)  Max (MB)  StdDev (MB)           Operation
+ ----------  -----  --------  --------  --------  --------  -----------  ----------------------------
+     24.007     96     0.250     0.262     0.000     0.979        0.101  [CUDA memcpy Host-to-Device]
+      3.594     89     0.040     0.041     0.000     0.041        0.004  [CUDA memcpy Device-to-Host]
+
+Generated:
+    /home/felipebns/campanha_aps2/resultados/perfil_v13_x50.nsys-rep
+    /home/felipebns/campanha_aps2/resultados/perfil_v13_x50.sqlite
