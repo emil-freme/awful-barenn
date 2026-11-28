@@ -1,4 +1,8 @@
-# Barenn: resultados
+# Barenn: otimização em CPU e migração para GPU
+
+Rede densa 64 → 32 → 16 → 10 do legado, treinada com SGD amostra por amostra (51 épocas). Otimizei a versão de CPU (memória, SIMD e OpenMP) e migrei para CUDA em quatro passos. Cada passo é um bloco com issue, PR e tag. **Todas as versões geram exatamente a mesma saída do legado.**
+
+## Resultados
 
 | Versão | O que mudou | Treino (s) | Avaliação x50 (ms) | Programa inteiro x50 (s) | Issue | Tag |
 |---|---|---:|---:|---:|---|---|
@@ -13,7 +17,46 @@
 
 Treino: 51 épocas com `optdigits.tra`. x50: `optdigits.tes` repetido 50 vezes (89.850 imagens, `scripts/teste_grande.sh 50`). Média de 5 execuções no Franky (v1.0: 3): CPU na fila `sunny_cpu`, nó compute10 exclusivo (i7-13700T, 8 núcleos no job, g++ 14.2; job 31094); GPU nas filas `pluton_gpu`/`sunny_gpu`, nó compute20 (RTX A1000, CUDA 12.8; jobs 31092, 31095 e 31108). `merry_cpu` e `sunny_cpu` usam os mesmos nós e só mudam o limite de tempo. "–": a versão não mede a avaliação separada. Todas as versões geram a mesma saída do legado (`scripts/validar.sh`).
 
-Para reproduzir:
+![todas as versões](docs/img/resumo.png)
+
+## Índice
+
+| Bloco | Issue (diagnóstico, hipótese e resultados) | PR | Tag |
+|---|---|---|---|
+| 1. Baseline reproduzível | [#1](https://github.com/felipebns/awful-barenn/issues/1) | [#2](https://github.com/felipebns/awful-barenn/pull/2) | [`v0.1-baseline`](https://github.com/felipebns/awful-barenn/releases/tag/v0.1-baseline) |
+| 2. Memória e SIMD na CPU | [#3](https://github.com/felipebns/awful-barenn/issues/3) | [#4](https://github.com/felipebns/awful-barenn/pull/4) | [`v0.2-cpu-memoria`](https://github.com/felipebns/awful-barenn/releases/tag/v0.2-cpu-memoria) |
+| 3. OpenMP | [#5](https://github.com/felipebns/awful-barenn/issues/5) | [#6](https://github.com/felipebns/awful-barenn/pull/6) | [`v0.3-cpu-openmp`](https://github.com/felipebns/awful-barenn/releases/tag/v0.3-cpu-openmp) |
+| 4. CUDA inicial | [#7](https://github.com/felipebns/awful-barenn/issues/7) | [#8](https://github.com/felipebns/awful-barenn/pull/8) | [`v1.0-cuda-ingenuo`](https://github.com/felipebns/awful-barenn/releases/tag/v1.0-cuda-ingenuo) |
+| 5. Dados residentes na GPU | [#9](https://github.com/felipebns/awful-barenn/issues/9) | [#10](https://github.com/felipebns/awful-barenn/pull/10) | [`v1.1-cuda-residente`](https://github.com/felipebns/awful-barenn/releases/tag/v1.1-cuda-residente) |
+| 6. Kernel único e memória compartilhada | [#11](https://github.com/felipebns/awful-barenn/issues/11) | [#12](https://github.com/felipebns/awful-barenn/pull/12) | [`v1.2-cuda-shared`](https://github.com/felipebns/awful-barenn/releases/tag/v1.2-cuda-shared) |
+| 7. Lote, pinned e streams | [#13](https://github.com/felipebns/awful-barenn/issues/13) | [#14](https://github.com/felipebns/awful-barenn/pull/14) | [`v1.3-cuda-streams`](https://github.com/felipebns/awful-barenn/releases/tag/v1.3-cuda-streams) |
+
+## Análise
+
+**CPU.** O `-O3` sozinho deu 14,7x (5,19 → 0,354 s); é ganho do compilador, por isso a base é a v0.1. O callgrind mostrou 36% das instruções num gradiente nunca usado e o maior custo na leitura dos pesos por coluna. Cinco commits (sem o trabalho inútil, pesos contíguos e transpostos, sem cópias, imagens contíguas, `-mavx2`) levaram o treino a 0,127 s: 2,8x sobre a v0.1 e 41x sobre o legado sem flags, ou 0,65 µs por amostra (23 GFLOP/s num núcleo). O treino não se divide entre threads, porque cada amostra depende da anterior. Por isso o OpenMP foi para a leitura e a avaliação, que crescem com os dados: no x50 o programa foi de 0,497 para 0,196 s (2,5x; 4,0x sobre a v0.1). Treino e `getline` são 31% do tempo serial, então o teto pela Lei de Amdahl é 3,25x, e o modelo acerta os tempos com 2, 4 e 8 threads com erro de ~1%. Com 16 threads não melhora, porque o job só tem 8 CPUs.
+
+**GPU.** Cada versão atacou o que o Nsight Systems mostrou na anterior:
+
+| Versão | Gargalo encontrado | Mudança | Ganho |
+|---|---|---|---|
+| v1.1 | v1.0 com 98% do tempo em `cudaMalloc`/`cudaMemcpy`/`cudaFree` (160 mil alocações e 172 mil cópias de 0,9 KB por época, 0,19 GB/s efetivos) | dados residentes na GPU | 23x |
+| v1.2 | 11 kernels e 2 cópias por amostra | treino num kernel só, de ~2,1 milhões de lançamentos para 1 | 16x |
+| v1.3 | 3 kernels e 1 cópia por imagem | avaliação em lote, pinned e streams | 159x na avaliação |
+
+Da v1.0 para a v1.3, o treino ficou 362x mais rápido e a avaliação do x50, 3.000x.
+
+**Por que a GPU ainda perde.**
+
+- **Treino:** o SGD sequencial só permite 1 bloco, 8 warps em 1 dos 18 SMs (0,9% da GPU). O kernel faz 8,8 GFLOP/s, 0,13% do pico de 6,7 TFLOP/s. Com 58 FLOP por byte de memória global, acima dos 35 FLOP/B do ponto de virada da A1000, o roofline diz que deveria ser limitado pelo cálculo. Então o limite é latência: para a saída ser idêntica, cada neurônio soma em ordem numa thread, e a amostra vira uma cadeia de somas dependentes e barreiras. São 1,7 µs na GPU contra 0,65 µs na CPU.
+- **Avaliação:** são 21 FLOP por byte que atravessa o PCIe. Só mandar as imagens (2,1 ms a 11,2 GB/s) custa o mesmo que a CPU com 8 threads leva para avaliar tudo (2,28 ms).
+- **Programa inteiro:** cada execução paga 2 s de inicialização da GPU, porque o modo de persistência está desligado.
+
+**Conclusão.** Para esta rede (2.720 pesos) com SGD por amostra, a melhor versão é a v0.3 na CPU. A migração para CUDA está completa e correta, e o caminho v1.0 → v1.3 mostra na prática a diferença entre latência e vazão. A GPU só compensaria com camadas muito maiores ou com treino em lotes, e treino em lotes muda o algoritmo e a saída.
+
+**Metodologia.** A saída de cada versão é comparada com a do legado (`scripts/validar.sh`). `-ffp-contract=off` e `-fmad=false` ficam porque FMA mudou a saída na CPU e na GPU sem ganho que compense: na CPU ficou 3% mais lenta, na GPU 2% mais rápida. As versões de CPU foram medidas num mesmo job com o nó exclusivo; o desvio é 0,2% dentro do job e ~2% entre dias. Instruções vêm do callgrind (notebook) e os perfis de GPU, do `nsys` (Franky). O `ncu` não tem permissão aos contadores no Franky (`ERR_NVGPUCTRPERM`), então a ocupação é a teórica, calculada a partir do `ptxas`.
+
+## Como reproduzir
+
 ```bash
 git checkout <tag>
 make && scripts/validar.sh ./barenn && scripts/bench.sh 5 ./barenn        # CPU (todas as tags)
