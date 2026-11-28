@@ -6,15 +6,19 @@
 | **v0.1** (baseline) | Makefile `-O3`, referência e scripts | 0,354 | – | 0,776 | [#1](https://github.com/felipebns/awful-barenn/issues/1) | [`v0.1-baseline`](https://github.com/felipebns/awful-barenn/releases/tag/v0.1-baseline) |
 | v0.2 | sem trabalho inútil, pesos contíguos, sem cópias, `-mavx2` | 0,127 | – | 0,497 | [#3](https://github.com/felipebns/awful-barenn/issues/3) | [`v0.2-cpu-memoria`](https://github.com/felipebns/awful-barenn/releases/tag/v0.2-cpu-memoria) |
 | **v0.3** (CPU otimizada) | OpenMP na leitura e na avaliação (8 threads) | 0,128 | 2,28 | 0,196 | [#5](https://github.com/felipebns/awful-barenn/issues/5) | [`v0.3-cpu-openmp`](https://github.com/felipebns/awful-barenn/releases/tag/v0.3-cpu-openmp) |
+| **v1.0** (CUDA inicial) | porte direto: kernels por operação, aloca e copia a cada chamada | 120,4 | 25.392 | 153,7 | [#7](https://github.com/felipebns/awful-barenn/issues/7) | [`v1.0-cuda-ingenuo`](https://github.com/felipebns/awful-barenn/releases/tag/v1.0-cuda-ingenuo) |
 
-Treino: 51 épocas com `optdigits.tra`. x50: `optdigits.tes` repetido 50 vezes (89.850 imagens, `scripts/teste_grande.sh 50`). Média de 5 execuções no Franky, compute10 (i7-13700T, 8 núcleos no job, g++ 14.2), todas no mesmo job. "–": a versão não mede a avaliação separada. Todas geram a mesma saída do legado (`scripts/validar.sh`).
+Treino: 51 épocas com `optdigits.tra`. x50: `optdigits.tes` repetido 50 vezes (89.850 imagens, `scripts/teste_grande.sh 50`). Média de 5 execuções no Franky (v1.0: 3): CPU no compute10 (i7-13700T, 8 núcleos no job, g++ 14.2), GPU no compute20 (RTX A1000, CUDA 12.8). "–": a versão não mede a avaliação separada. Todas as versões geram a mesma saída do legado (`scripts/validar.sh`).
 
 Para reproduzir:
 ```bash
-git checkout <tag> && make
-scripts/validar.sh ./barenn && scripts/bench.sh 5 ./barenn
-scripts/teste_grande.sh 50 && ./barenn optdigits.tra optdigits_x50.tes   # no Franky: sbatch slurm/omp.slurm
+git checkout <tag>
+make && scripts/validar.sh ./barenn && scripts/bench.sh 5 ./barenn        # CPU (todas as tags)
+scripts/teste_grande.sh 50 && ./barenn optdigits.tra optdigits_x50.tes   # volume maior (v0.3 em diante)
+module load cuda/12.8.1 && make barenn_gpu                                # GPU (v1.0 em diante, no Franky)
+scripts/validar.sh ./barenn_gpu && scripts/bench.sh 5 ./barenn_gpu
 ```
+Jobs prontos: `slurm/cpu.slurm` (CPU, 1 thread), `slurm/omp.slurm` (threads × schedules), `slurm/gpu.slurm` (GPU). Saídas brutas das medições em `docs/evidencias/`.
 
 ---
 

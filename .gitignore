@@ -1,9 +1,12 @@
-# binário
+# binários
 barenn
+barenn_gpu
 
 # saídas geradas (as evidências vão para docs/evidencias e para as issues)
 callgrind.out.*
 barenn-*.out
+*.nsys-rep
+*.sqlite
 
 # teste com volume maior (gerado por scripts/teste_grande.sh)
 optdigits_x*.tes
